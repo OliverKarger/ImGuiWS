@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImGuiWS", "ImGuiWS\ImGuiWS.csproj", "{BA282A95-512F-41F3-B24A-97E3D13FC26C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImGuiWS.Tests", "ImGuiWS.Tests\ImGuiWS.Tests.csproj", "{83FE0A6B-13EF-4507-8DB7-2D4A66D7455C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImGuiWS.Demo", "ImGuiWS.Demo\ImGuiWS.Demo.csproj", "{F7776A48-AE39-400D-AFD6-2E9DA1FB3DFF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BA282A95-512F-41F3-B24A-97E3D13FC26C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA282A95-512F-41F3-B24A-97E3D13FC26C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA282A95-512F-41F3-B24A-97E3D13FC26C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA282A95-512F-41F3-B24A-97E3D13FC26C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83FE0A6B-13EF-4507-8DB7-2D4A66D7455C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83FE0A6B-13EF-4507-8DB7-2D4A66D7455C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83FE0A6B-13EF-4507-8DB7-2D4A66D7455C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83FE0A6B-13EF-4507-8DB7-2D4A66D7455C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F7776A48-AE39-400D-AFD6-2E9DA1FB3DFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7776A48-AE39-400D-AFD6-2E9DA1FB3DFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7776A48-AE39-400D-AFD6-2E9DA1FB3DFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7776A48-AE39-400D-AFD6-2E9DA1FB3DFF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
