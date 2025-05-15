@@ -13,7 +13,6 @@ public class Window
     private static GraphicsDevice _gd;
     private static CommandList _cl;
     private static WindowBackend _controller;
-    // private static MemoryEditor _memoryEditor;
 
     // UI state
     private static float _f = 0.0f;
@@ -29,7 +28,7 @@ public class Window
 
     static void SetThing(out float i, float val) { i = val; }
 
-    static void Main(string[] args)
+    public static void Main(string[] args)
     {
         // Create window, GraphicsDevice, and all resources necessary for the demo.
         VeldridStartup.CreateWindowAndGraphicsDevice(
