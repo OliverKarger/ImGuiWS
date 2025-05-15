@@ -9,25 +9,27 @@ public enum WindowRenderMode
     SubWindowsFirst
 }
 
-public class Window(string label)
+public class Window
 {
-    public string Id { get; set; } = label.ToControlId();
-    public WindowControlsCollection Controls { get; internal set; } = new();
-    public WindowCollection Windows { get; internal set; } = new(this);
+    public string Id { get; set; }
+    public WindowControlsCollection Controls { get; internal set; }
+    public WindowCollection Windows { get; internal set; }
     public Window? Parent { get; internal set; }
     public WindowRenderMode RenderMode { get; set; } = WindowRenderMode.ControlsFirst;
-
     public bool Open { get; set; } = true;
-
     public event Action OnOpened;
     public event Action OnClosed;
-    
-    public string Label { get; set; } = label;
-    
-    protected internal virtual void Start()
+    public string Label { get; set; }
+
+    public Window(string label)
     {
-        
+        Id = label.ToControlId();
+        Label = label;
+        Controls = new WindowControlsCollection(this);
+        Windows = new WindowCollection(this);
     }
+
+    protected internal virtual void Start(){}
 
     protected internal virtual void Update()
     {
@@ -60,10 +62,6 @@ public class Window(string label)
 
         ImGui.End(); // Always call End if Begin was called
     }
-
-
-    protected internal virtual void Shutdown()
-    {
-        
-    }
+    
+    protected internal virtual void Shutdown(){}
 }

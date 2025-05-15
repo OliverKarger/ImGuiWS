@@ -3,19 +3,33 @@
 using System.Numerics;
 using ImGuiNET;
 using ImGuiWS.Controls;
+using ImGuiWS.Controls.Input;
 using Veldrid.StartupUtilities;
 using WindowState = Veldrid.WindowState;
 
 
 namespace ImGuiWS.Demo;
 
-class MyMainWindow() : ImGuiWS.MainWindow(new WindowCreateInfo(50, 50, 1680, 1024, WindowState.Normal, "Sample Window"))
+class MyMainWindow() : MainWindow(new WindowCreateInfo(50, 50, 1680, 1024, WindowState.Normal, "Sample Window"))
 {
     protected override void Start()
     {
-        Windows.Add("Test Window", window =>
+        Utils.LoadFontFromFile("C:\\Fonts\\Aptos.ttf",20);
+        
+        Windows.Add("Window 1", window =>
         {
-            window.Controls.Add<Button>(() => new Button("Test"), button => { });
+            window.Controls.Add<Button>(() => new Button("Test"), button =>
+            {
+                button.OnClick += () => Console.WriteLine("Button clicked!");
+            });
+        });
+
+        Windows.Add("Window 2", window =>
+        {
+            window.Controls.Add<Checkbox>(() => new Checkbox("Test"), checkbox=>
+            {
+                checkbox.OnValueChanged += value => Console.WriteLine($"Checkbox Value: {value}");
+            });
         });
     }
 

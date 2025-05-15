@@ -50,20 +50,23 @@ public class WindowBackend : IDisposable
         Context.CommandList = Context.GraphicsDevice.ResourceFactory.CreateCommandList();
 
         State.WindowSize = State.WindowSize with { X = (float)windowCreateInfo.WindowWidth, Y = (float)windowCreateInfo.WindowHeight };
-
         ImGui.CreateContext();
         var io = ImGui.GetIO();
         io.BackendFlags |= ImGuiBackendFlags.RendererHasVtxOffset;
         io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard |
-            ImGuiConfigFlags.DockingEnable;
-        io.Fonts.Flags |= ImFontAtlasFlags.NoBakedLines;
+                          ImGuiConfigFlags.DockingEnable;
+        io.Fonts.Flags &= ~ImFontAtlasFlags.NoBakedLines;
+        // io.Fonts.Flags |= ImFontAtlasFlags.NoBakedLines;
+    }
 
+    internal void PrepareRender()
+    {
         CreateDeviceResources(Context.GraphicsDevice, Context.GraphicsDevice.MainSwapchain.Framebuffer.OutputDescription);
         SetPerFrameImGuiData(1f / 60f);
         ImGui.NewFrame();
         State.FrameBegun = true;
     }
-
+    
     public void CreateDeviceResources(GraphicsDevice gd, OutputDescription outputDescription)
     {
         ResourceFactory factory = gd.ResourceFactory;
@@ -278,6 +281,7 @@ public class WindowBackend : IDisposable
     /// </summary>
     public void Update(float deltaSeconds, InputSnapshot snapshot)
     {
+        State.RenderingBegun = true;
         if (State.FrameBegun)
         {
             ImGui.Render();

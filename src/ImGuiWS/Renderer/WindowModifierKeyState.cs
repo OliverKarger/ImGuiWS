@@ -1,5 +1,8 @@
 ﻿namespace ImGuiWS.Renderer;
 
+/// <summary>
+///     State of Modifier Keys
+/// </summary>
 public class WindowModifierKeyState
 {
     public bool ControlDown { get; internal set; }

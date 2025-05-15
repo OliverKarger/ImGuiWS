@@ -5,10 +5,10 @@ using ImGuiWS.Controls.Utils;
 
 namespace ImGuiWS;
 
-public class WindowControlsCollection
+public class WindowControlsCollection(Window parent)
 {
     private readonly HashSet<ControlBase> Controls = new HashSet<ControlBase>();
-    public WindowControlsCollection? Parent { get; internal set; }
+    public Window Parent { get; internal set; } = parent;
     
     
     public WindowControlsCollection Add(ControlBase control)
@@ -17,7 +17,8 @@ public class WindowControlsCollection
         {
            throw new DuplicateNameException("Duplicate control name/id"); 
         }
-        
+
+        control.Parent = Parent;
         Controls.Add(control);
         return this;
     }

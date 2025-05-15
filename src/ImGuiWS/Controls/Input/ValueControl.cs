@@ -2,11 +2,8 @@
 
 namespace ImGuiWS.Controls;
 
-public abstract class ValueControl<T> : ControlBase
+public abstract class ValueControl<T>(string id) : ControlBase(id)
 {
-    protected ValueControl(string id) : base(id)
-    { }
-
     protected ValueControl(T initialValue, string id) : this(id)
     {
         Value = initialValue;

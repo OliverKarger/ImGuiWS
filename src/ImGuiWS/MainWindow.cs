@@ -11,13 +11,14 @@ namespace ImGuiWS;
 
 public class MainWindow : Window
 {
-    public WindowBackend Backend { get; internal protected set; }
-    public WindowEvents Events { get; internal protected set; } = new();
+    protected WindowBackend Backend { get; set; }
+    internal WindowEvents Events { get; set; } = new();
+    protected WindowUtils Utils { get; set; }
 
     public WindowRenderMode RenderMode { get; set; } = WindowRenderMode.ControlsFirst;
     
-    internal protected Stopwatch Stopwatch = Stopwatch.StartNew();
-    internal protected float DeltaTime = .0f;
+    protected internal Stopwatch Stopwatch = Stopwatch.StartNew();
+    protected internal float DeltaTime = .0f;
 
     public bool WindowExists => Backend.Context.Window.Exists;
 
@@ -30,11 +31,13 @@ public class MainWindow : Window
     public MainWindow(WindowCreateInfo createInfo) : base("MainWindow") 
     {
         Backend = new WindowBackend(createInfo, this);
+        Utils = new WindowUtils(Backend, this);
     }
     
     public void Render()
     {
         Start();
+        Backend.PrepareRender();
         
         while (WindowExists)
         {

@@ -3,6 +3,8 @@
 public abstract class ControlBase(string id)
 {
     public readonly string Id = id;
+    internal Window? Parent { get; set; }
+    
     public abstract void Render();
 
     public override bool Equals(object obj)

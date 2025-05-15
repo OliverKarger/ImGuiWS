@@ -13,7 +13,8 @@ public class WindowCollection(Window parent)
         {
             throw new DuplicateNameException("Duplicate SubWindow name/id");
         }
-        
+
+        window.Parent = Parent;
         SubWindows.Add(window);
         return this;
     }
