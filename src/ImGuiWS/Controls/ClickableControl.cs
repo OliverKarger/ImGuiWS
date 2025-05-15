@@ -13,7 +13,7 @@ public class ClickableControl(string id) : Control(id)
 {
     public event Action<OnClickEventArgs>? OnClick;
 
-    internal virtual void SimulateClick()
+    internal virtual void InvokeClick()
     {
         OnClick?.Invoke(new OnClickEventArgs(Id));
     }

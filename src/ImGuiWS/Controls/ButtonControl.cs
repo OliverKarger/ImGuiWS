@@ -1,4 +1,6 @@
-﻿namespace ImGuiWS.Controls;
+﻿using ImGuiNET;
+
+namespace ImGuiWS.Controls;
 
 public class ButtonControl(string label, string id) : ClickableControl(id)
 {
@@ -6,7 +8,10 @@ public class ButtonControl(string label, string id) : ClickableControl(id)
 
     internal override void Render()
     {
-        
+        if (ImGui.Button(Label))
+        {
+            InvokeClick();
+        }
     }
     
 }
