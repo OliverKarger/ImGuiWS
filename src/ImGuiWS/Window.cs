@@ -12,6 +12,7 @@ public class Window
 {
     public WindowBackend Backend { get; internal protected set; }
     public WindowEvents Events { get; internal protected set; } = new();
+    public WindowControlsCollection Controls { get; } = new();
 
     internal protected Stopwatch Stopwatch = Stopwatch.StartNew();
     internal protected float DeltaTime = .0f;
@@ -42,7 +43,7 @@ public class Window
             Backend.Update(DeltaTime, snapshot);
 
             Update();
-            
+            Controls.Render();
             Backend.Submit();
         }
 
