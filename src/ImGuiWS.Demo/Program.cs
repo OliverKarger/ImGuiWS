@@ -13,10 +13,26 @@ class MyWindow() : ImGuiWS.Window(new WindowCreateInfo(50, 50, 1680, 1024, Windo
 {
     protected override void Start()
     {
-        Controls.AddControl<Button>(() => new Button("Hello!"), button =>
+        Controls.Add<Button>(() => new Button("Hello!"), control =>
         {
-            button.OnClick += () => { Console.WriteLine("Button 1 clicked!"); };
-            button.Size = new Vector2(128, 512);
+            control.OnClick += () => { Console.WriteLine("Button 1 clicked!"); };
+            control.Size = new Vector2(128, 512);
+            control.OnClick += () =>
+            {
+                var inputControl = Controls.GetByName<InputBox<string>>("String Input");
+                inputControl.Value = string.Empty;
+            };
+        });
+
+        Controls.Add<InputBox<string>>(() => new InputBox<string>("String Input"), control =>
+        {
+            control.MaxLength = 32;
+            control.Value = "Currently no Value!";
+        });
+
+        Controls.Add<InputBox<int>>(() => new InputBox<int>("Int Input"), control =>
+        {
+
         });
     }
     
