@@ -9,12 +9,12 @@ public class InputBox<T> : ValueControl<T>
     public string Label { get; set; }
     public uint MaxLength { get; set; } = 32;
     
-    public InputBox(string label) : base(label)
+    public InputBox(string label) : base(label.ToControlId())
     {
         Label = label;
     }
 
-    public InputBox(string label, T initialValue) : base(initialValue, label)
+    public InputBox(string label, T initialValue) : base(initialValue, label.ToControlId())
     {
         Label = label;
     }

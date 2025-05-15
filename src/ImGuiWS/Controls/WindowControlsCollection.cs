@@ -8,7 +8,9 @@ namespace ImGuiWS;
 public class WindowControlsCollection
 {
     private readonly HashSet<ControlBase> Controls = new HashSet<ControlBase>();
-
+    public WindowControlsCollection? Parent { get; internal set; }
+    
+    
     public WindowControlsCollection Add(ControlBase control)
     {
         if (Controls.Any(e => e.Id == control.Id))
@@ -24,7 +26,6 @@ public class WindowControlsCollection
     {
         T control = factory();
         configure?.Invoke(control);
-
         return Add(control);
     }
 

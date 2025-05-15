@@ -14,14 +14,14 @@ public class WindowBackend : IDisposable
     public WindowModifierKeyState ModifierKeyState { get; internal set; } = new();
     public WindowState State { get; internal set; } = new();
 
-    private readonly Window _window;
+    private readonly MainWindow _mainWindow;
     
     /// <summary>
     /// Constructs a new ImGuiController.
     /// </summary>
-    public WindowBackend(WindowCreateInfo windowCreateInfo, Window windowHandle)
+    public WindowBackend(WindowCreateInfo windowCreateInfo, MainWindow mainWindowHandle)
     {
-        _window = windowHandle;
+        _mainWindow = mainWindowHandle;
         VeldridStartup.CreateWindowAndGraphicsDevice(
             windowCreateInfo,
             new GraphicsDeviceOptions(true, null, true, ResourceBindingModel.Improved, true, true),
@@ -42,7 +42,7 @@ public class WindowBackend : IDisposable
                 X = (float)Context.Window.Width, 
                 Y = (float)Context.Window.Height
             };
-            _window.Events.InvokeWindowResized(
+            _mainWindow.Events.InvokeWindowResized(
                 Context.Window.Width,
                 Context.Window.Height);
         };

@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
 using ImGuiNET;
+using ImGuiWS.Controls;
 using Veldrid;
 using Veldrid.StartupUtilities;
 
@@ -8,12 +9,13 @@ using ImGuiWS.Renderer;
 
 namespace ImGuiWS;
 
-public class Window
+public class MainWindow : Window
 {
     public WindowBackend Backend { get; internal protected set; }
     public WindowEvents Events { get; internal protected set; } = new();
-    public WindowControlsCollection Controls { get; } = new();
 
+    public WindowRenderMode RenderMode { get; set; } = WindowRenderMode.ControlsFirst;
+    
     internal protected Stopwatch Stopwatch = Stopwatch.StartNew();
     internal protected float DeltaTime = .0f;
 
@@ -25,15 +27,15 @@ public class Window
         set => Backend.State.ClearColor = value;
     }
 
-    public Window(WindowCreateInfo createInfo) 
+    public MainWindow(WindowCreateInfo createInfo) : base("MainWindow") 
     {
         Backend = new WindowBackend(createInfo, this);
-        Start();
     }
-
-    public void RunLoop()
+    
+    public void Render()
     {
-        // Main application loop
+        Start();
+        
         while (WindowExists)
         {
             DeltaTime = Stopwatch.ElapsedTicks / (float)Stopwatch.Frequency;
@@ -42,28 +44,25 @@ public class Window
             if (!WindowExists) { break; }
             Backend.Update(DeltaTime, snapshot);
 
+            switch (RenderMode)
+            {
+                case WindowRenderMode.ControlsFirst:
+                    Controls.Render();
+                    Windows.Render();
+                    break;
+                case WindowRenderMode.SubWindowsFirst:
+                    Windows.Render();
+                    Controls.Render();
+                    break;
+            }
+            
             Update();
-            Controls.Render();
+            
             Backend.Submit();
         }
 
-        Stop();
+        Shutdown();
         
         Backend.Dispose();
-    }
-
-    protected virtual void Start()
-    {
-        
-    }
-
-    protected virtual void Update()
-    {
-        
-    }
-
-    protected virtual void Stop()
-    {
-        
     }
 }

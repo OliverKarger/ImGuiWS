@@ -4,7 +4,7 @@ namespace ImGuiWS.Controls;
 
 public abstract class ValueControl<T> : ControlBase
 {
-    protected ValueControl(string id) : base(id.ToControlId())
+    protected ValueControl(string id) : base(id)
     { }
 
     protected ValueControl(T initialValue, string id) : this(id)
