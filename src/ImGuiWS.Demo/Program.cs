@@ -1,9 +1,11 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using System.Net.Mime;
 using System.Numerics;
 using ImGuiNET;
 using ImGuiWS.Controls;
 using ImGuiWS.Controls.Input;
+using ImGuiWS.Controls.Navigation;
 using Veldrid.StartupUtilities;
 using WindowState = Veldrid.WindowState;
 
@@ -14,6 +16,20 @@ class MyMainWindow() : MainWindow(new WindowCreateInfo(50, 50, 1680, 1024, Windo
 {
     protected override void UserStart()
     {
+        Controls.Add<Navbar>(() => new Navbar("Main Navbar"), navbar =>
+        {
+            navbar.Items.Add(() => new NavbarItem("Item 1"), item => { });
+            navbar.Menus.Add(() => new NavbarMenu("Application"), menu =>
+            {
+                menu.Items.Add(() => new NavbarItem("Exit", "Alt+F4"), item =>
+                {
+                    item.OnClick += () => Environment.Exit(0);
+                });
+
+                menu.Items.Add(() => new NavbarItem("Item 2"), item => { });
+            });
+        });
+        
         Windows.Add<Window>(() => new Window("Window 1"), window =>
         {
             window.Options.Position = new Vector2(250, 100);

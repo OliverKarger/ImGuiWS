@@ -2,7 +2,7 @@
 
 namespace ImGuiWS.Renderer;
 
-public abstract class RenderObjectCollection<TBase>(MainWindow rootWindow, Window? directParent) : IDisposable, IRenderable
+public abstract class RenderObjectCollection<TBase>(MainWindow rootWindow, Window? directParent) : IDisposable, IRenderable where TBase : IRenderable
 {
     protected readonly HashSet<TBase> _objects = new();
     protected internal readonly Window? DirectParent = directParent;
@@ -19,8 +19,19 @@ public abstract class RenderObjectCollection<TBase>(MainWindow rootWindow, Windo
     }
     
     public abstract RenderObjectCollection<TBase> Add<TDerived>(Func<TDerived> factory, Action<TDerived>? configure) where TDerived: TBase;
-    
-    public abstract void Start();
-    public abstract void Update();
-    public abstract void Shutdown();
+
+    public virtual void Start()
+    {
+        foreach (var obj in _objects) obj.Start();
+    }
+
+    public virtual void Update()
+    {
+        foreach (var obj in _objects) obj.Update();
+    }
+
+    public virtual void Shutdown()
+    {
+        foreach (var obj in _objects) obj.Shutdown();
+    }
 }
