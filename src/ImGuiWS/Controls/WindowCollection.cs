@@ -14,19 +14,19 @@ namespace ImGuiWS.Controls;
 /// </param>
 public class WindowCollection(MainWindow rootWindow, Window? parent) : RenderObjectCollection<Window>(rootWindow, parent)
 {
-    private readonly ILogger _logger = LoggerFactory.Create<WindowCollection>();
+    private readonly ILogger _logger = LoggerFactory.Create<WindowCollection>(parent?.Label);
 
     /// <summary>
     ///     Adds a new Window
     /// </summary>
-    public override WindowCollection Add<Window>(Func<Window> factory, Action<Window>? configure)
+    public override WindowCollection Add<TWindow>(Func<TWindow> factory, Action<TWindow>? configure)
     {
-        Window window = factory();
+        TWindow window = factory();
         
         window.RootWindow = RootWindow;
         window.DirectParent = DirectParent;
-        window.Controls = new WindowControlsCollection(RootWindow, DirectParent);
-        window.Windows = new WindowCollection(RootWindow, DirectParent);
+        window.Controls = new WindowControlsCollection(RootWindow, window);
+        window.Windows = new WindowCollection(RootWindow, window);
         
         configure?.Invoke(window);
         

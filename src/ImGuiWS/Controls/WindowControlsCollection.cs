@@ -10,11 +10,11 @@ namespace ImGuiWS;
 
 public class WindowControlsCollection(MainWindow rootWindow, Window? directParent) : RenderObjectCollection<ControlBase>(rootWindow, directParent)
 {
-    private readonly ILogger _logger = LoggerFactory.Create<WindowControlsCollection>();
+    private readonly ILogger _logger = LoggerFactory.Create<WindowControlsCollection>(directParent?.Label);
 
-    public override WindowControlsCollection Add<T>(Func<T> factory, Action<T>? configure)
+    public override WindowControlsCollection Add<TControl>(Func<TControl> factory, Action<TControl>? configure)
     {
-        T? control = factory();
+        TControl? control = factory();
         
         control.RootWindow = RootWindow;
         control.DirectParent = DirectParent;
@@ -25,7 +25,8 @@ public class WindowControlsCollection(MainWindow rootWindow, Window? directParen
         {
             throw new DuplicateNameException("Duplicate control name/id"); 
         }
-        
+
+        _objects.Add(control);
         _logger.Information("Added Control {id} to Window {window}", control.Id, DirectParent?.Id ?? RootWindow.Id);
         return this;
     }

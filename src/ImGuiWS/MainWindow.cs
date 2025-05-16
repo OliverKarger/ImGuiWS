@@ -34,8 +34,8 @@ public class MainWindow : Window
         Events = new WindowEvents();
         Utils = new WindowUtils(Backend, this);
 
-        Controls = new WindowControlsCollection(this, null);
-        Windows = new WindowCollection(this, null);
+        Controls = new WindowControlsCollection(this,this);
+        Windows = new WindowCollection(this,this);
     }
 
     public override void Start()
