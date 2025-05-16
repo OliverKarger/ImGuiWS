@@ -1,9 +1,17 @@
 ﻿using System.Numerics;
+using ImGuiNET;
 using ImGuiWS.Utils.Extensions;
 using Veldrid;
 using Veldrid.Sdl2;
 
 namespace ImGuiWS.Renderer;
+
+public class Font(string name, ImFontPtr fontPtr, int size)
+{
+    public readonly string Name = name;
+    public readonly ImFontPtr FontPtr = fontPtr;
+    public readonly int Size = size;
+}
 
 /// <summary>
 ///     Resource/Object Context for Window Backend
@@ -31,7 +39,8 @@ public class WindowBackendContext : IDisposable
     public Dictionary<TextureView, ResourceSetInfo> SetsByView { get; internal set; } = new();
     public Dictionary<Texture, TextureView> AutoViewsByTexture { get; internal set; } = new();
     public Dictionary<IntPtr, ResourceSetInfo> ViewsById { get; internal set; } = new();
-
+    
+    public HashSet<Font> Fonts { get; internal set; } = new();
     
     public void Dispose()
     {   
@@ -59,6 +68,7 @@ public class WindowBackendContext : IDisposable
         SetsByView?.Clear();
         ViewsById?.Clear();
         AutoViewsByTexture?.Clear();
-        ViewsById?.Clear();
+        ViewsById?.Clear();        
+        Fonts.Clear();
     }
 }

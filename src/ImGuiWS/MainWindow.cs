@@ -41,7 +41,18 @@ public class MainWindow : Window
     public override void Start()
     {
         UserStart();
+        
+        // Load Fonts
+        int fontSize = 24;
+        // Utils.LoadFontFromMemory("Orbitron-Black", fontSize);
+        // Utils.LoadFontFromMemory("Orbitron-Bold", fontSize);
+        // Utils.LoadFontFromMemory("Orbitron-ExtraBold", fontSize);
+        // Utils.LoadFontFromMemory("Orbitron-SemiBold", fontSize);
+        // Utils.LoadFontFromMemory("Orbitron-Medium", fontSize);
+        // Utils.LoadFontFromMemory("Orbitron-Regular", fontSize);
+        
         Backend.SetupContext();
+
         
         switch (RenderMode)
         {
@@ -54,6 +65,8 @@ public class MainWindow : Window
                 Controls.Start();
                 break;
         }
+        
+        GC.Collect();
     }
     
     public override void Update()

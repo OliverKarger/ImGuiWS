@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using ImGuiNET;
 using ImGuiWS.Logging;
+using ImGuiWS.Utils;
 using Serilog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -62,6 +63,53 @@ public class WindowUtils(WindowBackend backend, MainWindow window)
         
         _logger.Information("Loaded Font {path} ({size}px)", path, size);
     }
+
+    public Font LoadFontFromMemory(string name, int size)
+    {
+        if (_backend.State.RenderingBegun)
+        {
+            _logger.Error("Failed to load Font. Rendering has already begun!");
+            throw new InvalidOperationException("Cannot add Font when rendering has already begun!");
+        }
+
+        var bytes = EmbeddedResourceManager.GetEmbeddedResourceBytes<WindowUtils>(name);
+        if (bytes.Length == 0)
+        {
+            throw new InvalidOperationException("Failed to load Font");
+        }
+
+        Font? newFont;
+        unsafe
+        {
+            var io = ImGui.GetIO();
+
+            ImFontConfig* config = ImGuiNative.ImFontConfig_ImFontConfig();
+            config->OversampleH = 6;
+            config->OversampleV = 4;
+            config->PixelSnapH = 1;
+
+            ushort* ranges = (ushort*)io.Fonts.GetGlyphRangesDefault();
+
+            fixed (byte* fontData = bytes)
+            {
+                ImFont* font = ImGuiNative.ImFontAtlas_AddFontFromMemoryTTF(io.Fonts.NativePtr, fontData, bytes.Length, size, config, ranges);
+                ImFontPtr fontPtr = new ImFontPtr(font);
+                newFont = new Font(name, fontPtr, size);
+            }
+
+            IntPtr pixels;
+            int width, height, bytesPerPixel;
+            io.Fonts.GetTexDataAsRGBA32(out pixels, out width, out height, out bytesPerPixel);
+
+            _backend.RecreateFontDeviceTexture();
+        }
+
+        backend.Context.Fonts.Add(newFont);
+        _logger.Information("Loaded Font from memory: {name} ({size}px)", name, size);
+        return newFont;
+    }
+
+
 
     /// <summary>
     ///     Creates new Image Texture
