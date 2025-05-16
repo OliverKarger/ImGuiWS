@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using ImGuiNET;
 using ImGuiWS.Controls.Utils;
+using ImGuiWS.Design;
 using ImGuiWS.Logging;
 using ImGuiWS.Renderer;
 using Serilog;
@@ -25,6 +26,9 @@ public class WindowOptions
     public bool Open { get; set; } = true;
     public bool Collapsed { get; set; } = false;
     public string Label { get; set; } = string.Empty;
+
+    public Styles Style { get; set; } = new();
+    public Colors Colors { get; set; } = new();
 }
 
 /// <summary>
@@ -41,6 +45,8 @@ public class Window(string label) : IRenderable
 
     private bool _firstRenderDone { get; set; } = false;
     private bool _collapsedLastFrame { get; set; } = false;
+    private bool _colorsApplied { get; set; } = false;
+    private bool _stylesApplied { get; set; } = false;
     
     /// <summary>
     ///     ImGui ID
@@ -98,7 +104,7 @@ public class Window(string label) : IRenderable
             Windows.Count,
             RenderMode,
             Id);
-        
+
         switch (RenderMode)
         {
             case WindowRenderMode.ControlsFirst:
@@ -135,7 +141,7 @@ public class Window(string label) : IRenderable
             // Set initial collapsed state before the window is created
             ImGui.SetNextWindowCollapsed(Options.Collapsed);
         }
-
+        
         bool open = Options.Open;
         if (ImGui.Begin($"{Options.Label}##{Id}", ref open))
         {
@@ -181,6 +187,7 @@ public class Window(string label) : IRenderable
         }
 
         ImGui.End();
+        
         _firstRenderDone = true;
     }
 
