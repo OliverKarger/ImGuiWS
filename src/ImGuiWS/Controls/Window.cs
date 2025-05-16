@@ -1,4 +1,5 @@
-﻿using ImGuiNET;
+﻿using System.Numerics;
+using ImGuiNET;
 using ImGuiWS.Controls.Utils;
 using ImGuiWS.Logging;
 using ImGuiWS.Renderer;
@@ -19,6 +20,28 @@ public class Window(string label) : IRenderable
 {
     private readonly ILogger _logger = LoggerFactory.Create<Window>(label);
 
+    /// <summary>
+    ///     Window Position
+    /// </summary>
+    public Vector2 Position { get; set; } = Vector2.Zero;
+
+    /// <summary>
+    ///     Window Size
+    /// </summary>
+    public Vector2 Size { get; set; } = Vector2.Zero;
+
+    /// <summary>
+    ///     Fix Position
+    /// </summary>
+    public bool FixedPosition { get; set; } = true;
+    
+    /// <summary>
+    ///     Fix Size
+    /// </summary>
+    public bool FixedSize { get; set; } = true;
+
+    private bool _firstRenderDone { get; set; } = false;
+    
     /// <summary>
     ///     ImGui ID
     /// </summary>
@@ -107,6 +130,16 @@ public class Window(string label) : IRenderable
     /// </remarks>
     public virtual void Update()
     {
+        if (FixedSize || !_firstRenderDone)
+        {
+            ImGui.SetNextWindowSize(Size);
+        }
+
+        if (FixedPosition || !_firstRenderDone)
+        {
+            ImGui.SetNextWindowPos(Position);
+        }
+        
         bool open = Open;
         if (ImGui.Begin(Label, ref open))
         {
@@ -125,6 +158,8 @@ public class Window(string label) : IRenderable
             }
         }
 
+        _firstRenderDone = true;
+        
         ImGui.End();
     }
 
