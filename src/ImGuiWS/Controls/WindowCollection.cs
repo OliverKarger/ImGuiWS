@@ -14,7 +14,7 @@ namespace ImGuiWS.Controls;
 /// </param>
 public class WindowCollection(MainWindow rootWindow, Window? parent) : RenderObjectCollection<Window>(rootWindow, parent)
 {
-    private readonly ILogger _logger = LoggerFactory.Create<WindowCollection>(parent?.Label);
+    private readonly ILogger _logger = LoggerFactory.Create<WindowCollection>(parent?.Options.Label);
 
     /// <summary>
     ///     Adds a new Window
@@ -36,7 +36,7 @@ public class WindowCollection(MainWindow rootWindow, Window? parent) : RenderObj
         }
         
         _objects.Add(window);
-        _logger.Information("Added Window {windowName}", window.Label);
+        _logger.Information("Added Window {windowName}", window.Options.Label);
         return this;
     }
 
@@ -45,7 +45,7 @@ public class WindowCollection(MainWindow rootWindow, Window? parent) : RenderObj
         foreach (var obj in _objects)
         {
             obj.Start();
-            _logger.Information("Initialized Window {name}",obj.Label);
+            _logger.Information("Initialized Window {name}",obj.Options.Label);
         }
     }
 
@@ -53,9 +53,7 @@ public class WindowCollection(MainWindow rootWindow, Window? parent) : RenderObj
     {
         foreach (var obj in _objects)
         {
-            ImGui.PushID(obj.Id); 
             obj.Update();
-            ImGui.PopID();
         }
     }
 
@@ -64,7 +62,7 @@ public class WindowCollection(MainWindow rootWindow, Window? parent) : RenderObj
         foreach (var obj in _objects)
         {
             obj.Shutdown();
-            _logger.Information("Shutdown Window {name}", obj.Label);
+            _logger.Information("Shutdown Window {name}", obj.Options.Label);
         }
     }
 }

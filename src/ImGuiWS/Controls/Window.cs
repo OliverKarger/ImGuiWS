@@ -14,33 +14,33 @@ public enum WindowRenderMode
 }
 
 /// <summary>
+///     Options Class for Windows
+/// </summary>
+public class WindowOptions
+{
+    public Vector2 Position { get; set; } = Vector2.Zero;
+    public Vector2 Size { get; set; } = Vector2.One;
+    public bool FixedSize { get; set; } = true;
+    public bool FixedPosition { get; set; } = true;
+    public bool Open { get; set; } = true;
+    public bool Collapsed { get; set; } = false;
+    public string Label { get; set; } = string.Empty;
+}
+
+/// <summary>
 ///     Base Class for all Windows
 /// </summary>
 public class Window(string label) : IRenderable
 {
     private readonly ILogger _logger = LoggerFactory.Create<Window>(label);
 
-    /// <summary>
-    ///     Window Position
-    /// </summary>
-    public Vector2 Position { get; set; } = Vector2.Zero;
-
-    /// <summary>
-    ///     Window Size
-    /// </summary>
-    public Vector2 Size { get; set; } = Vector2.Zero;
-
-    /// <summary>
-    ///     Fix Position
-    /// </summary>
-    public bool FixedPosition { get; set; } = true;
-    
-    /// <summary>
-    ///     Fix Size
-    /// </summary>
-    public bool FixedSize { get; set; } = true;
+    public readonly WindowOptions Options = new()
+    {
+        Label = label
+    };
 
     private bool _firstRenderDone { get; set; } = false;
+    private bool _collapsedLastFrame { get; set; } = false;
     
     /// <summary>
     ///     ImGui ID
@@ -76,11 +76,6 @@ public class Window(string label) : IRenderable
     public WindowRenderMode RenderMode { get; set; } = WindowRenderMode.SubWindowsFirst;
     
     /// <summary>
-    ///     Wether the Window is open or not
-    /// </summary>
-    public bool Open { get; set; } = true;
-    
-    /// <summary>
     ///     Invoked when Window is opened
     /// </summary>
     public event Action OnOpened;
@@ -89,11 +84,6 @@ public class Window(string label) : IRenderable
     ///     Invoked when Window is closed
     /// </summary>
     public event Action OnClosed;
-
-    /// <summary>
-    ///     Window Label / Title
-    /// </summary>
-    public string Label { get; set; } = label;
 
     /// <summary>
     ///     Will be executed when Window is first registered
@@ -130,20 +120,46 @@ public class Window(string label) : IRenderable
     /// </remarks>
     public virtual void Update()
     {
-        if (FixedSize || !_firstRenderDone)
+        if (Options.FixedSize || !_firstRenderDone)
         {
-            ImGui.SetNextWindowSize(Size);
+            ImGui.SetNextWindowSize(Options.Size);
         }
 
-        if (FixedPosition || !_firstRenderDone)
+        if (Options.FixedPosition || !_firstRenderDone)
         {
-            ImGui.SetNextWindowPos(Position);
+            ImGui.SetNextWindowPos(Options.Position);
         }
-        
-        bool open = Open;
-        if (ImGui.Begin(Label, ref open))
+
+        if (!_firstRenderDone)
         {
-            Open = open;
+            // Set initial collapsed state before the window is created
+            ImGui.SetNextWindowCollapsed(Options.Collapsed);
+        }
+
+        bool open = Options.Open;
+        if (ImGui.Begin($"{Options.Label}##{Id}", ref open))
+        {
+            // Update Options.Open in case user closed the window
+            Options.Open = open;
+
+            // Handle collapsed state detection
+            bool isCollapsed = ImGui.IsWindowCollapsed();
+            if (isCollapsed != _collapsedLastFrame)
+            {
+                Options.Collapsed = isCollapsed;
+
+                // Optional: Add custom logic for on-collapse/expand
+                if (isCollapsed)
+                {
+                    Console.WriteLine($"Window '{Options.Label}' was just collapsed.");
+                }
+                else
+                {
+                    Console.WriteLine($"Window '{Options.Label}' was just expanded.");
+                }
+            }
+
+            _collapsedLastFrame = isCollapsed;
 
             switch (RenderMode)
             {
@@ -156,11 +172,16 @@ public class Window(string label) : IRenderable
                     Controls.Update();
                     break;
             }
+
+        }
+        else
+        {
+            // If Begin returns false, still update Options.Open
+            Options.Open = open;
         }
 
-        _firstRenderDone = true;
-        
         ImGui.End();
+        _firstRenderDone = true;
     }
 
     /// <summary>

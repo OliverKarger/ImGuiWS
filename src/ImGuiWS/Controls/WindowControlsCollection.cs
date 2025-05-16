@@ -10,7 +10,7 @@ namespace ImGuiWS;
 
 public class WindowControlsCollection(MainWindow rootWindow, Window? directParent) : RenderObjectCollection<ControlBase>(rootWindow, directParent)
 {
-    private readonly ILogger _logger = LoggerFactory.Create<WindowControlsCollection>(directParent?.Label);
+    private readonly ILogger _logger = LoggerFactory.Create<WindowControlsCollection>(directParent?.Options.Label);
 
     public override WindowControlsCollection Add<TControl>(Func<TControl> factory, Action<TControl>? configure)
     {

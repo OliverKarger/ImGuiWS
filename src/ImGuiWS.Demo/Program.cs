@@ -18,8 +18,9 @@ class MyMainWindow() : MainWindow(new WindowCreateInfo(50, 50, 1680, 1024, Windo
 
         Windows.Add<Window>(() => new Window("Window 1"), window =>
         {
-            window.Position = new Vector2(250, 100);
-            window.Size = new Vector2(175, 175);
+            window.Options.Position = new Vector2(250, 100);
+            window.Options.Size = new Vector2(175, 175);
+            window.Options.Collapsed = true;
             window.Controls.Add<Button>(() => new Button("Test"), button =>
             {
                 button.OnClick += () => Console.WriteLine("Button clicked!");
@@ -28,8 +29,8 @@ class MyMainWindow() : MainWindow(new WindowCreateInfo(50, 50, 1680, 1024, Windo
 
         Windows.Add(() => new Window("Window 2"), window =>
         {
-            window.Position = new Vector2(500, 100);
-            window.Size = new Vector2(175, 175);
+            window.Options.Position = new Vector2(500, 100);
+            window.Options.Size = new Vector2(175, 175);
             window.Controls.Add<Checkbox>(() => new Checkbox("Test"), checkbox=>
             {
                 checkbox.OnValueChanged += value => Console.WriteLine($"Checkbox Value: {value}");
@@ -38,10 +39,10 @@ class MyMainWindow() : MainWindow(new WindowCreateInfo(50, 50, 1680, 1024, Windo
 
         Windows.Add(() => new Window("Window 3"), window =>
         {
-            window.Position = new Vector2(750, 100);
-            window.Size = new Vector2(175, 175);
-            window.FixedSize = false;
-            window.FixedPosition = false;
+            window.Options.Position = new Vector2(750, 100);
+            window.Options.Size = new Vector2(175, 175);
+            window.Options.FixedSize = false;
+            window.Options.FixedPosition = false;
             window.Controls.Add<Image>(() => new Image("image_1"), image =>
             {
                 image.ImagePath = Path.Join(Environment.CurrentDirectory, "azure.png");
