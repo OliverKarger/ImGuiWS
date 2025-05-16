@@ -1,6 +1,8 @@
 ﻿using System.Data;
 using ImGuiNET;
+using ImGuiWS.Logging;
 using ImGuiWS.Renderer;
+using Serilog;
 
 namespace ImGuiWS.Controls;
 
@@ -10,10 +12,9 @@ namespace ImGuiWS.Controls;
 /// <param name="parent">
 ///     Parent Window
 /// </param>
-public class WindowCollection(Window parent) : IRenderable
+public class WindowCollection(MainWindow rootWindow, Window? parent) : RenderObjectCollection<Window>(rootWindow, parent)
 {
-    private readonly HashSet<Window> SubWindows = new();
-    private readonly Window Parent = parent;
+    private readonly ILogger _logger = LoggerFactory.Create<WindowCollection>();
 
     /// <summary>
     ///     Adds a new Window
@@ -25,61 +26,55 @@ public class WindowCollection(Window parent) : IRenderable
     /// <exception cref="DuplicateNameException">
     ///     Thrown when a Window with the same Id already exists
     /// </exception>
-    public WindowCollection Add(Window window)
+    public override WindowCollection Add<Window>(Window obj)
     {
-        if (SubWindows.Any(e => e.Id == window.Id))
+        if (_objects.Any(e => e.Id == obj.Id))
         {
             throw new DuplicateNameException("Duplicate SubWindow name/id");
         }
 
-        window.Parent = Parent;
-        SubWindows.Add(window);
+        obj.RootWindow = RootWindow;
+        obj.DirectParent = DirectParent;
+        _objects.Add(obj);
+        _logger.Information("Added Window {windowName}", obj.Label);
         return this;
     }
 
     /// <summary>
     ///     Adds a new Window
     /// </summary>
-    /// <param name="label">
-    ///     Window Label
-    /// </param>
-    /// <param name="configure">
-    ///     Delegate to Configure the Window
-    /// </param>
-    public WindowCollection Add(string label, Action<Window> configure)
+    public override WindowCollection Add<Window>(Func<Window> factory, Action<Window> configure)
     {
-        Window window = new Window(label);
+        Window window = factory();
         configure(window);
         return Add(window);
     }
 
-    public void Start()
+    public override void Start()
     {
-        foreach (var subWindow in SubWindows)
+        foreach (var obj in _objects)
         {
-            ImGui.PushID(subWindow.Id); 
-            subWindow.Start();
+            obj.Start();
+            _logger.Information("Initialized Window {name}",obj.Label);
+        }
+    }
+
+    public override void Update()
+    {
+        foreach (var obj in _objects)
+        {
+            ImGui.PushID(obj.Id); 
+            obj.Update();
             ImGui.PopID();
         }
     }
 
-    public void Update()
+    public override void Shutdown()
     {
-        foreach (var subWindow in SubWindows)
+        foreach (var obj in _objects)
         {
-            ImGui.PushID(subWindow.Id); 
-            subWindow.Update();
-            ImGui.PopID();
-        }
-    }
-
-    public void Shutdown()
-    {
-        foreach (var subWindow in SubWindows)
-        {
-            ImGui.PushID(subWindow.Id); 
-            subWindow.Shutdown();
-            ImGui.PopID();
+            obj.Shutdown();
+            _logger.Information("Shutdown Window {name}", obj.Label);
         }
     }
 }

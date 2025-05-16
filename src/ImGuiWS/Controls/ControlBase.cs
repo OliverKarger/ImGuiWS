@@ -12,11 +12,18 @@ public abstract class ControlBase(string id) : IRenderable
     ///     ImGui ID
     /// </summary>
     public readonly string Id = id;
+
+    /// <summary>
+    ///     Controls is visible
+    /// </summary>
+    public bool Visible { get; set; } = true;
     
     /// <summary>
     ///     Window, the Control is associated to
     /// </summary>
-    internal Window? Parent { get; set; }
+    protected internal Window? DirectParent { get; set; }
+
+    protected internal MainWindow RootWindow { get; set; }
 
     public override bool Equals(object obj)
     {

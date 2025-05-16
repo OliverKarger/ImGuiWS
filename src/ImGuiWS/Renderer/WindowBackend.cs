@@ -2,7 +2,9 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using ImGuiNET;
+using ImGuiWS.Logging;
 using ImGuiWS.Utils;
+using Serilog;
 using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
@@ -11,6 +13,8 @@ namespace ImGuiWS.Renderer;
 
 public class WindowBackend : IDisposable
 {
+    private readonly ILogger _logger = LoggerFactory.Create<WindowBackend>();
+    
     /// <inheritdoc cref="WindowBackendContext"/> 
     public WindowBackendContext Context { get; internal set; } = new();
     
@@ -46,6 +50,7 @@ public class WindowBackend : IDisposable
     /// </param>
     public WindowBackend(WindowCreateInfo windowCreateInfo, MainWindow mainWindowHandle)
     {
+        _logger.Debug("Initializing Backend for Window {windowName}", windowCreateInfo.WindowTitle);
         var mainWindow = mainWindowHandle;
         VeldridStartup.CreateWindowAndGraphicsDevice(
             windowCreateInfo,
@@ -56,6 +61,8 @@ public class WindowBackend : IDisposable
         Context.GraphicsDevice = graphicsDevice;
         Context.Window = window;
 
+        _logger.Debug("Graphics Device and Window Object initialized");
+        
         Context.Window.Resized += () =>
         {
             Context.GraphicsDevice.MainSwapchain.Resize(
@@ -81,6 +88,9 @@ public class WindowBackend : IDisposable
         io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard |
                           ImGuiConfigFlags.DockingEnable;
         io.Fonts.Flags &= ~ImFontAtlasFlags.NoBakedLines;
+        
+        _logger.Debug("ImGui Context initialized");
+        _logger.Information("Window Backend initialization done");
     }
 
     /// <summary>
@@ -95,6 +105,7 @@ public class WindowBackend : IDisposable
         SetPerFrameImGuiData(1f / 60f);
         ImGui.NewFrame();
         State.FrameBegun = true;
+        _logger.Debug("Prepared ImGui Context");
     }
     
     /// <summary>
@@ -102,16 +113,20 @@ public class WindowBackend : IDisposable
     /// </summary>
     private void CreateDeviceResources()
     {
+        _logger.Debug("Creating Device Resources");
         ResourceFactory factory = Context.GraphicsDevice.ResourceFactory;
         Context.VertexBuffer = factory.CreateBuffer(new BufferDescription(10000, BufferUsage.VertexBuffer | BufferUsage.Dynamic));
         Context.VertexBuffer.Name = "ImGui.NET Vertex Buffer";
         Context.IndexBuffer = factory.CreateBuffer(new BufferDescription(2000, BufferUsage.IndexBuffer | BufferUsage.Dynamic));
         Context.IndexBuffer.Name = "ImGui.NET Index Buffer";
         RecreateFontDeviceTexture();
+        
 
         Context.ProjectionBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
         Context.ProjectionBuffer.Name = "ImGui.NET Projection Buffer";
 
+        _logger.Debug("Created Buffers");
+        
         byte[] vertexShaderBytes = LoadEmbeddedShaderCode( "imgui-vertex", ShaderStages.Vertex);
         byte[] fragmentShaderBytes = LoadEmbeddedShaderCode("imgui-frag", ShaderStages.Fragment);
         Context.VertexShader = factory.CreateShader(new ShaderDescription(ShaderStages.Vertex, vertexShaderBytes, Context.GraphicsDevice.BackendType == GraphicsBackend.Metal ? "VS" : "main"));
@@ -131,6 +146,8 @@ public class WindowBackend : IDisposable
         Context.TexLayout = factory.CreateResourceLayout(new ResourceLayoutDescription(
             new ResourceLayoutElementDescription("MainTexture", ResourceKind.TextureReadOnly, ShaderStages.Fragment)));
 
+        _logger.Debug("Created Shaders and Texture Layout");
+        
         GraphicsPipelineDescription pd = new GraphicsPipelineDescription(
             BlendStateDescription.SingleAlphaBlend,
             new DepthStencilStateDescription(false, false, ComparisonKind.Always),
@@ -141,12 +158,17 @@ public class WindowBackend : IDisposable
             Context.GraphicsDevice.MainSwapchain.Framebuffer.OutputDescription,
             ResourceBindingModel.Default);
         Context.Pipeline = factory.CreateGraphicsPipeline(ref pd);
+        
+        _logger.Debug("Created Graphics Pipeline");
 
         Context.MainResourceSet = factory.CreateResourceSet(new ResourceSetDescription(Context.ResLayout,
             Context.ProjectionBuffer,
             Context.GraphicsDevice.PointSampler));
 
         Context.FontTextureResourceSet = factory.CreateResourceSet(new ResourceSetDescription(Context.TexLayout, Context.FontTextureView));
+        
+        _logger.Debug("Created Font Texture");
+        _logger.Information("Device Resource initialization done");
     }
 
     /// <summary>
@@ -162,8 +184,10 @@ public class WindowBackend : IDisposable
             Context.SetsByView.Add(textureView, rsi);
             Context.ViewsById.Add(rsi.ImGuiBinding, rsi);
             Context.OwnedResources.Add(resourceSet);
+            _logger.Debug("Created ImGui Binding {bindingId} for TextureView: {name}", rsi.ImGuiBinding, textureView.Name);
         }
 
+        _logger.Debug("Returned ImGui Binding {bindingId} for TextureView", rsi.ImGuiBinding, textureView.Name);
         return rsi.ImGuiBinding;
     }
     
@@ -196,9 +220,11 @@ public class WindowBackend : IDisposable
     {
         if (!Context.ViewsById.TryGetValue(imGuiBinding, out ResourceSetInfo tvi))
         {
+            _logger.Fatal("Found no Resource Set for ImGui Binding Id {bindingId}", imGuiBinding);
             throw new InvalidOperationException("No registered ImGui binding with id " + imGuiBinding.ToString());
         }
 
+        _logger.Debug("Got Image Resource Set for ImGui Binding Id {bindingId}", imGuiBinding);
         return tvi.ResourceSet;
     }
 
@@ -239,9 +265,14 @@ public class WindowBackend : IDisposable
                 break;
             }
             default:
+                _logger.Error("Failed to load Shader Code for {name} (Stage: {stage}): Invalid Backend {graphicsBackend}", 
+                    name, 
+                    stage,
+                    Context.GraphicsDevice.ResourceFactory.BackendType);
                 throw new NotImplementedException();
         }
         
+        _logger.Debug("Loaded Shader Code for {name} (Stage: {stage})", name, stage);
         return EmbeddedResourceManager.GetEmbeddedResourceBytes<WindowBackend>(resourceName);
     }
 
@@ -284,6 +315,7 @@ public class WindowBackend : IDisposable
         Context.FontTextureView = Context.GraphicsDevice.ResourceFactory.CreateTextureView(Context.FontTexture);
 
         io.Fonts.ClearTexData();
+        _logger.Information("Created/Recreated Font Device Texture");
     }
 
     /// <summary>
@@ -299,6 +331,7 @@ public class WindowBackend : IDisposable
         Context.CommandList.End();
         Context.GraphicsDevice.SubmitCommands(Context.CommandList);
         Context.GraphicsDevice.SwapBuffers(Context.GraphicsDevice.MainSwapchain);
+        _logger.Verbose("Submitted Command List to Renderer");
     }
     
     /// <summary>

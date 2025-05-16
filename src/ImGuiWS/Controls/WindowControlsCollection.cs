@@ -2,29 +2,35 @@
 using ImGuiNET;
 using ImGuiWS.Controls;
 using ImGuiWS.Controls.Utils;
+using ImGuiWS.Logging;
 using ImGuiWS.Renderer;
+using Serilog;
 
 namespace ImGuiWS;
 
-public class WindowControlsCollection(Window parent) : IRenderable
+public class WindowControlsCollection(MainWindow rootWindow, Window? directParent) : RenderObjectCollection<ControlBase>(rootWindow, directParent)
 {
     private readonly HashSet<ControlBase> Controls = new HashSet<ControlBase>();
-    public Window Parent { get; internal set; } = parent;
+    public Window? DirectParent { get; internal set; } = directParent;
+    public MainWindow RootWindow { get; internal set; } = rootWindow;
+    private readonly ILogger _logger = LoggerFactory.Create<WindowControlsCollection>();
     
     
-    public WindowControlsCollection Add(ControlBase control)
+    public override WindowControlsCollection Add<TDerived>(TDerived control)
     {
         if (Controls.Any(e => e.Id == control.Id))
         {
            throw new DuplicateNameException("Duplicate control name/id"); 
         }
 
-        control.Parent = Parent;
+        control.DirectParent = DirectParent;
+        control.RootWindow = RootWindow;
         Controls.Add(control);
+        _logger.Information("Added Control {id} to Window {window}", control.Id, DirectParent?.Id ?? RootWindow.Id);
         return this;
     }
 
-    public WindowControlsCollection Add<T>(Func<T> factory, Action<T>? configure) where T : ControlBase
+    public override WindowControlsCollection Add<T>(Func<T> factory, Action<T>? configure)
     {
         T control = factory();
         configure?.Invoke(control);
@@ -52,33 +58,34 @@ public class WindowControlsCollection(Window parent) : IRenderable
     {
         return GetById<T>(name.ToControlId());
     }
-    public virtual void Start()
+    public override void Start()
     {
         foreach (var control in Controls)
         {
-            ImGui.PushID(control.Id);
             control.Start();
-            ImGui.PopID();
+            _logger.Information("Initialized Control {id} of Window {window}", control.Id, DirectParent?.Id ?? RootWindow.Id);
         }
     }
 
-    public virtual void Update()
+    public override void Update()
     {
         foreach (var control in Controls)
         {
-            ImGui.PushID(control.Id);
-            control.Update();
-            ImGui.PopID();
+            if (control.Visible)
+            {
+                ImGui.PushID(control.Id);
+                control.Update();
+                ImGui.PopID();
+            }
         }
     }
 
-    public virtual void Shutdown()
+    public override void Shutdown()
     {
         foreach (var control in Controls)
         {
-            ImGui.PushID(control.Id);
             control.Shutdown();
-            ImGui.PopID();
+            _logger.Information("Destroyed Control {id} of Window {window}", control.Id, DirectParent?.Id ?? RootWindow.Id);
         }
     }
 }

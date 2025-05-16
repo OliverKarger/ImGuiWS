@@ -1,6 +1,8 @@
 ﻿using System.Numerics;
 using System.Runtime.InteropServices;
 using ImGuiNET;
+using ImGuiWS.Logging;
+using Serilog;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -15,6 +17,7 @@ public class WindowUtils(WindowBackend backend, MainWindow window)
 {
     private readonly MainWindow _mainWindow = window;
     private readonly WindowBackend _backend = backend;
+    private readonly ILogger _logger = LoggerFactory.Create<WindowUtils>();
 
     /// <summary>
     ///     Loads a <c>*.ttf</c> Font from File
@@ -29,6 +32,7 @@ public class WindowUtils(WindowBackend backend, MainWindow window)
     {
         if (_backend.State.RenderingBegun)
         {
+            _logger.Error("Failed to load Font. Rendering has already begun!");
             throw new InvalidOperationException("Cannot add Font when rendering has already begun!");
         }
 
@@ -55,6 +59,8 @@ public class WindowUtils(WindowBackend backend, MainWindow window)
 
             _backend.RecreateFontDeviceTexture();
         }
+        
+        _logger.Information("Loaded Font {path} ({size}px)", path, size);
     }
 
     /// <summary>
@@ -119,6 +125,7 @@ public class WindowUtils(WindowBackend backend, MainWindow window)
             throw new NullReferenceException("Failed to create ImGui Binding.");
         }
 
+        _logger.Information("Loaded Image {path} as Texture ({x}x{y})", path, size.X, size.Y);
         return binding;
     }
 }

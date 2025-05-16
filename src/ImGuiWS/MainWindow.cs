@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using ImGuiNET;
 using ImGuiWS.Controls;
 using Veldrid;
@@ -11,9 +12,9 @@ namespace ImGuiWS;
 
 public class MainWindow : Window
 {
-    protected WindowBackend Backend { get; set; }
-    internal WindowEvents Events { get; set; } = new();
-    protected WindowUtils Utils { get; set; }
+    protected internal WindowBackend Backend { get; set; }
+    protected internal WindowEvents Events { get; set; } = new();
+    protected internal WindowUtils Utils { get; set; }
 
     public WindowRenderMode RenderMode { get; set; } = WindowRenderMode.ControlsFirst;
     
@@ -28,14 +29,20 @@ public class MainWindow : Window
         set => Backend.State.ClearColor = value;
     }
 
-    public MainWindow(WindowCreateInfo createInfo) : base("MainWindow") 
+    public MainWindow(WindowCreateInfo createInfo) : base("MainWindow")
     {
-        Backend = new WindowBackend(createInfo, this);
-        Utils = new WindowUtils(Backend, this);
+        RootWindow = this;
+        DirectParent = this;
+        Backend = new WindowBackend(createInfo, RootWindow);
+        Utils = new WindowUtils(Backend, RootWindow);
+        Controls = new WindowControlsCollection(RootWindow, DirectParent);
+        Windows = new WindowCollection(RootWindow, DirectParent);
     }
 
     public override void Start()
     {
+        UserStart();
+        
         switch (RenderMode)
         {
             case WindowRenderMode.ControlsFirst:
@@ -47,8 +54,6 @@ public class MainWindow : Window
                 Controls.Start();
                 break;
         }
-        
-        UserStart();
         
         Backend.SetupContext();
     }

@@ -1,6 +1,8 @@
 ﻿using ImGuiNET;
 using ImGuiWS.Controls.Utils;
+using ImGuiWS.Logging;
 using ImGuiWS.Renderer;
+using Serilog;
 
 namespace ImGuiWS.Controls;
 
@@ -15,6 +17,8 @@ public enum WindowRenderMode
 /// </summary>
 public class Window : IRenderable
 {
+    private readonly ILogger _logger = LoggerFactory.Create<Window>();
+    
     /// <summary>
     ///     ImGui ID
     /// </summary>
@@ -34,9 +38,14 @@ public class Window : IRenderable
     public WindowCollection Windows { get; internal set; }
     
     /// <summary>
-    ///     Handle to parent Window
+    ///     Handle to direct parent Window
     /// </summary>
-    public Window? Parent { get; internal set; }
+    public Window? DirectParent { get; internal set; }
+    
+    /// <summary>
+    ///     Handle to Root Window
+    /// </summary>
+    public MainWindow RootWindow { get; internal set; }
     
     /// <summary>
     ///     Window Render Mode
@@ -65,10 +74,11 @@ public class Window : IRenderable
 
     public Window(string label)
     {
+        _logger.Information("Initializing new Window {label}", label);
         Id = label.ToControlId();
         Label = label;
-        Controls = new WindowControlsCollection(this);
-        Windows = new WindowCollection(this);
+        Controls = new WindowControlsCollection(RootWindow, this);
+        Windows = new WindowCollection(RootWindow, this);
     }
 
     /// <summary>
@@ -77,7 +87,20 @@ public class Window : IRenderable
     /// <remarks>
     ///     Should be used for resource Allocations
     /// </remarks>
-   public virtual void Start(){}
+    public virtual void Start()
+    {
+        if (RenderMode == WindowRenderMode.ControlsFirst)
+        {
+            Controls.Start();
+            Windows.Start();
+        }
+
+        if (RenderMode == WindowRenderMode.SubWindowsFirst)
+        {
+            Windows.Update();
+            Controls.Update();
+        }
+    }
 
     /// <summary>
     ///     Will be called each Frame
@@ -116,9 +139,22 @@ public class Window : IRenderable
 
         ImGui.End(); // Always call End if Begin was called
     }
-    
+
     /// <summary>
     ///     Called when the Window Object is destroyed
     /// </summary>
-    public virtual void Shutdown(){}
+    public virtual void Shutdown()
+    {
+        if (RenderMode == WindowRenderMode.ControlsFirst)
+        {
+            Controls.Start();
+            Windows.Start();
+        }
+
+        if (RenderMode == WindowRenderMode.SubWindowsFirst)
+        {
+            Windows.Update();
+            Controls.Update();
+        }
+    }
 }

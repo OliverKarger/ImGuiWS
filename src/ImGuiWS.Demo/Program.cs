@@ -15,8 +15,8 @@ class MyMainWindow() : MainWindow(new WindowCreateInfo(50, 50, 1680, 1024, Windo
     protected override void UserStart()
     {
         Utils.LoadFontFromFile("C:\\Fonts\\Aptos.ttf",20);
-        
-        Windows.Add("Window 1", window =>
+
+        Windows.Add<Window>(() => new Window("Window 1"), window =>
         {
             window.Controls.Add<Button>(() => new Button("Test"), button =>
             {
@@ -24,11 +24,19 @@ class MyMainWindow() : MainWindow(new WindowCreateInfo(50, 50, 1680, 1024, Windo
             });
         });
 
-        Windows.Add("Window 2", window =>
+        Windows.Add(() => new Window("Window 2"), window =>
         {
             window.Controls.Add<Checkbox>(() => new Checkbox("Test"), checkbox=>
             {
                 checkbox.OnValueChanged += value => Console.WriteLine($"Checkbox Value: {value}");
+            });
+        });
+
+        Windows.Add(() => new Window("Window 3"), window =>
+        {
+            window.Controls.Add<Image>(() => new Image("image_1"), image =>
+            {
+                image.ImagePath = Path.Join(Environment.CurrentDirectory, "azure.png");
             });
         });
     }
