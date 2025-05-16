@@ -49,7 +49,7 @@ public class MainWindow : Window
         // Utils.LoadFontFromMemory("Orbitron-ExtraBold", fontSize);
         // Utils.LoadFontFromMemory("Orbitron-SemiBold", fontSize);
         // Utils.LoadFontFromMemory("Orbitron-Medium", fontSize);
-        // Utils.LoadFontFromMemory("Orbitron-Regular", fontSize);
+        Utils.LoadFontFromMemory("Orbitron-Regular", fontSize);
         
         Backend.SetupContext();
 
