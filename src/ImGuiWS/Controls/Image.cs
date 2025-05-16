@@ -11,14 +11,33 @@ public class Image(string id) : ControlBase(id)
     public IntPtr BindingId { get; set; } = IntPtr.Zero;
     
     /// <summary>
-    ///     Size of the Image
+    ///     Size of the Original Image
     /// </summary>
-    public Vector2 ImageSize { get; set; } = Vector2.Zero;
+    public Vector2 SourceImageSize { get; private set; } = Vector2.Zero;
+
+    private float _scaleFactor = 1.0f;
+    
+    /// <summary>
+    ///     Scale Factor
+    /// </summary>
+    public float ScaleFactor
+    {
+        get => _scaleFactor;
+        set
+        {
+            _scaleFactor = value;
+            ScaledImageSize = SourceImageSize * value;
+        }
+    }
+
+    private Vector2 ScaledImageSize { get; set; } = Vector2.Zero; 
     
     /// <summary>
     ///     Path to the Image
     /// </summary>
     public string ImagePath { get; set; } = string.Empty;
+
+    private bool _errorShown = false;
     
     /// <summary>
     ///     Loads the Image if <c>BindingId</c> is <see cref="IntPtr.Zero"/>
@@ -27,18 +46,25 @@ public class Image(string id) : ControlBase(id)
     {
         if (BindingId == IntPtr.Zero)
         {
-            var imageSize = ImageSize;
+            var imageSize = SourceImageSize;
             BindingId = RootWindow.Utils.CreateImageTexture(ImagePath, out imageSize);
-            ImageSize = imageSize;
+            SourceImageSize = imageSize;
+            ScaledImageSize = SourceImageSize * _scaleFactor;
         }
     }
 
     public override void Update()
     {
-        if (BindingId != IntPtr.Zero)
+        if (BindingId == IntPtr.Zero)
         {
-            ImGui.Image(BindingId!, ImageSize);
+            if (!_errorShown)
+            {
+                Console.WriteLine("WARNING: BindingId is null!");
+                _errorShown = true;
+            }
         }
+        
+        ImGui.Image(BindingId!, ScaledImageSize);
     }
 
     public override void Shutdown()

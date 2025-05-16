@@ -184,10 +184,10 @@ public class WindowBackend : IDisposable
             Context.SetsByView.Add(textureView, rsi);
             Context.ViewsById.Add(rsi.ImGuiBinding, rsi);
             Context.OwnedResources.Add(resourceSet);
-            _logger.Debug("Created ImGui Binding {bindingId} for TextureView: {name}", rsi.ImGuiBinding, textureView.Name);
+            _logger.Verbose("Created ImGui Binding {bindingId} for TextureView: {name}", rsi.ImGuiBinding, textureView.Name);
         }
 
-        _logger.Debug("Returned ImGui Binding {bindingId} for TextureView", rsi.ImGuiBinding, textureView.Name);
+        _logger.Verbose("Returned ImGui Binding {bindingId} for TextureView", rsi.ImGuiBinding, textureView.Name);
         return rsi.ImGuiBinding;
     }
     
@@ -224,7 +224,7 @@ public class WindowBackend : IDisposable
             throw new InvalidOperationException("No registered ImGui binding with id " + imGuiBinding.ToString());
         }
 
-        _logger.Debug("Got Image Resource Set for ImGui Binding Id {bindingId}", imGuiBinding);
+        _logger.Verbose("Got Image Resource Set for ImGui Binding Id {bindingId}", imGuiBinding);
         return tvi.ResourceSet;
     }
 

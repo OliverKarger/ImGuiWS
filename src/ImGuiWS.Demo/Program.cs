@@ -37,6 +37,7 @@ class MyMainWindow() : MainWindow(new WindowCreateInfo(50, 50, 1680, 1024, Windo
             window.Controls.Add<Image>(() => new Image("image_1"), image =>
             {
                 image.ImagePath = Path.Join(Environment.CurrentDirectory, "azure.png");
+                image.ScaleFactor = 0.1f;
             });
         });
     }
@@ -52,6 +53,11 @@ public static class Program
 {
     public static void Main(string[] args)
     {
+        string imguiIniPath = Path.Join(Environment.CurrentDirectory, "imgui.ini");
+        if (File.Exists(imguiIniPath))
+        {
+            File.Delete(imguiIniPath);
+        }
         var window = new MyMainWindow();
         window.RenderLoop();
     }

@@ -25,8 +25,8 @@ public class WindowBackendContext : IDisposable
     public Pipeline Pipeline { get; internal set; }
     public ResourceSet MainResourceSet { get; internal set; }
     public ResourceSet FontTextureResourceSet { get; internal set; }
-    
-    public ICollection<IDisposable> OwnedResources { get; internal set; }
+
+    public HashSet<IDisposable> OwnedResources { get; internal set; } = new();
     
     public Dictionary<TextureView, ResourceSetInfo> SetsByView { get; internal set; } = new();
     public Dictionary<Texture, TextureView> AutoViewsByTexture { get; internal set; } = new();

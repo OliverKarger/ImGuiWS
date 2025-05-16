@@ -17,7 +17,7 @@ public enum WindowRenderMode
 /// </summary>
 public class Window(string label) : IRenderable
 {
-    private readonly ILogger _logger = LoggerFactory.Create<Window>();
+    private readonly ILogger _logger = LoggerFactory.Create<Window>(label);
 
     /// <summary>
     ///     ImGui ID
@@ -93,8 +93,8 @@ public class Window(string label) : IRenderable
                 Windows.Start();
                 break;
             case WindowRenderMode.SubWindowsFirst:
-                Windows.Update();
-                Controls.Update();
+                Windows.Start();
+                Controls.Start();
                 break;
         }
     }
@@ -136,12 +136,12 @@ public class Window(string label) : IRenderable
         switch (RenderMode)
         {
             case WindowRenderMode.ControlsFirst:
-                Controls.Start();
-                Windows.Start();
+                Controls.Shutdown();
+                Windows.Shutdown();
                 break;
             case WindowRenderMode.SubWindowsFirst:
-                Windows.Update();
-                Controls.Update();
+                Windows.Shutdown();
+                Controls.Shutdown();
                 break;
         }
     }
