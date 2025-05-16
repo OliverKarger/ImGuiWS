@@ -2,10 +2,11 @@
 using ImGuiNET;
 using ImGuiWS.Controls;
 using ImGuiWS.Controls.Utils;
+using ImGuiWS.Renderer;
 
 namespace ImGuiWS;
 
-public class WindowControlsCollection(Window parent)
+public class WindowControlsCollection(Window parent) : IRenderable
 {
     private readonly HashSet<ControlBase> Controls = new HashSet<ControlBase>();
     public Window Parent { get; internal set; } = parent;
@@ -51,13 +52,32 @@ public class WindowControlsCollection(Window parent)
     {
         return GetById<T>(name.ToControlId());
     }
-
-    internal void Render()
+    public virtual void Start()
     {
         foreach (var control in Controls)
         {
             ImGui.PushID(control.Id);
-            control.Render();
+            control.Start();
+            ImGui.PopID();
+        }
+    }
+
+    public virtual void Update()
+    {
+        foreach (var control in Controls)
+        {
+            ImGui.PushID(control.Id);
+            control.Update();
+            ImGui.PopID();
+        }
+    }
+
+    public virtual void Shutdown()
+    {
+        foreach (var control in Controls)
+        {
+            ImGui.PushID(control.Id);
+            control.Shutdown();
             ImGui.PopID();
         }
     }

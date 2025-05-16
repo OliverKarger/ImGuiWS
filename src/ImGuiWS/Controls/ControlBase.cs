@@ -1,11 +1,22 @@
-﻿namespace ImGuiWS.Controls;
+﻿using ImGuiWS.Renderer;
 
-public abstract class ControlBase(string id)
+namespace ImGuiWS.Controls;
+
+/// <summary>
+///     Base Class for all Controls
+/// </summary>
+/// <param name="id"></param>
+public abstract class ControlBase(string id) : IRenderable
 {
+    /// <summary>
+    ///     ImGui ID
+    /// </summary>
     public readonly string Id = id;
-    internal Window? Parent { get; set; }
     
-    public abstract void Render();
+    /// <summary>
+    ///     Window, the Control is associated to
+    /// </summary>
+    internal Window? Parent { get; set; }
 
     public override bool Equals(object obj)
     {
@@ -21,4 +32,8 @@ public abstract class ControlBase(string id)
     {
         return Id?.GetHashCode() ?? 0;
     }
+
+    public abstract void Start();
+    public abstract void Update();
+    public abstract void Shutdown();
 }

@@ -10,7 +10,7 @@ public class WindowState
 {
     internal bool FrameBegun { get; set; } = false;
     internal IntPtr FontAtlasId { get; set; } = (IntPtr)1;
-    internal int LastAssignedId { get; set; } = 100;
+    internal IntPtr LastAssignedId { get; set; } = 100;
     internal bool RenderingBegun { get; set; } = false;
     
     public Vector2 WindowSize { get; internal set; }

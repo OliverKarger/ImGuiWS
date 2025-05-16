@@ -17,7 +17,11 @@ public class Checkbox : ValueControl<bool>
         Label = label;
     }
 
-    public override void Render()
+    public override void Start()
+    {
+    }
+
+    public override void Update()
     {
         bool temp = Value;
         ImGui.Checkbox(Label.ToControlId(), ref temp);
@@ -25,4 +29,6 @@ public class Checkbox : ValueControl<bool>
         OnValueChanged?.Invoke(temp);
         Value = temp;
     }
+
+    public override void Shutdown(){}
 }

@@ -12,7 +12,7 @@ namespace ImGuiWS.Demo;
 
 class MyMainWindow() : MainWindow(new WindowCreateInfo(50, 50, 1680, 1024, WindowState.Normal, "Sample Window"))
 {
-    protected override void Start()
+    protected override void UserStart()
     {
         Utils.LoadFontFromFile("C:\\Fonts\\Aptos.ttf",20);
         
@@ -34,7 +34,7 @@ class MyMainWindow() : MainWindow(new WindowCreateInfo(50, 50, 1680, 1024, Windo
     }
 
 
-    protected override void Update()
+    protected override void UserUpdate()
     {
         ImGui.ShowDemoWindow();
     }
@@ -45,6 +45,6 @@ public static class Program
     public static void Main(string[] args)
     {
         var window = new MyMainWindow();
-        window.Render();
+        window.RenderLoop();
     }
 }

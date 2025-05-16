@@ -33,39 +33,93 @@ public class MainWindow : Window
         Backend = new WindowBackend(createInfo, this);
         Utils = new WindowUtils(Backend, this);
     }
+
+    public override void Start()
+    {
+        switch (RenderMode)
+        {
+            case WindowRenderMode.ControlsFirst:
+                Controls.Start();
+                Windows.Start();
+                break;
+            case WindowRenderMode.SubWindowsFirst:
+                Windows.Start();
+                Controls.Start();
+                break;
+        }
+        
+        UserStart();
+        
+        Backend.SetupContext();
+    }
     
-    public void Render()
+    public override void Update()
+    {
+        DeltaTime = Stopwatch.ElapsedTicks / (float)Stopwatch.Frequency;
+        Stopwatch.Restart();
+        InputSnapshot snapshot = Backend.Context.Window.PumpEvents();
+        if (!WindowExists) { return; }
+        Backend.UpdateInput(DeltaTime, snapshot);
+
+        switch (RenderMode)
+        {
+            case WindowRenderMode.ControlsFirst:
+                Controls.Update();
+                Windows.Update();
+                break;
+            case WindowRenderMode.SubWindowsFirst:
+                Windows.Update();
+                Controls.Update();
+                break;
+        }
+        
+        UserUpdate();
+        
+        Backend.Submit();
+    }
+
+    public void RenderLoop()
     {
         Start();
-        Backend.PrepareRender();
-        
+
         while (WindowExists)
         {
-            DeltaTime = Stopwatch.ElapsedTicks / (float)Stopwatch.Frequency;
-            Stopwatch.Restart();
-            InputSnapshot snapshot = Backend.Context.Window.PumpEvents();
-            if (!WindowExists) { break; }
-            Backend.Update(DeltaTime, snapshot);
-
-            switch (RenderMode)
-            {
-                case WindowRenderMode.ControlsFirst:
-                    Controls.Render();
-                    Windows.Render();
-                    break;
-                case WindowRenderMode.SubWindowsFirst:
-                    Windows.Render();
-                    Controls.Render();
-                    break;
-            }
-            
             Update();
-            
-            Backend.Submit();
+        }
+        
+        Shutdown();
+    }
+    
+    public override void Shutdown()
+    {
+        UserShutdown();
+        
+        switch (RenderMode)
+        {
+            case WindowRenderMode.ControlsFirst:
+                Controls.Shutdown();
+                Windows.Shutdown();
+                break;
+            case WindowRenderMode.SubWindowsFirst:
+                Windows.Shutdown();
+                Controls.Shutdown();
+                break;
         }
 
-        Shutdown();
-        
         Backend.Dispose();
+    }
+
+    protected virtual void UserStart()
+    {
+    }
+
+    protected virtual void UserUpdate()
+    {
+        
+    }
+
+    protected virtual void UserShutdown()
+    {
+        
     }
 }

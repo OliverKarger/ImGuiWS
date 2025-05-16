@@ -1,9 +1,13 @@
-﻿using ImGuiWS.Utils.Extensions;
+﻿using System.Numerics;
+using ImGuiWS.Utils.Extensions;
 using Veldrid;
 using Veldrid.Sdl2;
 
 namespace ImGuiWS.Renderer;
 
+/// <summary>
+///     Resource/Object Context for Window Backend
+/// </summary>
 public class WindowBackendContext : IDisposable
 {
     public GraphicsDevice GraphicsDevice { get; internal set; }
@@ -27,6 +31,7 @@ public class WindowBackendContext : IDisposable
     public Dictionary<TextureView, ResourceSetInfo> SetsByView { get; internal set; } = new();
     public Dictionary<Texture, TextureView> AutoViewsByTexture { get; internal set; } = new();
     public Dictionary<IntPtr, ResourceSetInfo> ViewsById { get; internal set; } = new();
+
     
     public void Dispose()
     {   

@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using ImGuiNET;
+using ImGuiWS.Utils;
 using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
@@ -10,18 +11,42 @@ namespace ImGuiWS.Renderer;
 
 public class WindowBackend : IDisposable
 {
+    /// <inheritdoc cref="WindowBackendContext"/> 
     public WindowBackendContext Context { get; internal set; } = new();
+    
+    /// <inheritdoc cref="WindowModifierKeyState"/> 
     public WindowModifierKeyState ModifierKeyState { get; internal set; } = new();
+    
+    /// <inheritdoc cref="WindowState"/>     
     public WindowState State { get; internal set; } = new();
 
-    private readonly MainWindow _mainWindow;
-    
     /// <summary>
-    /// Constructs a new ImGuiController.
+    ///     Returns the next available ImGui Binding ID
+    ///     or Updates the current one
     /// </summary>
+    public IntPtr NextId
+    {
+        get
+        {
+            IntPtr nextId = State.LastAssignedId++;
+            return nextId;
+        }
+        private set => State.LastAssignedId = value;
+    }
+
+    /// <summary>
+    ///     Main Constructor
+    ///     Initializes Rendering and ImGui Context
+    /// </summary>
+    /// <param name="windowCreateInfo">
+    ///     Setup Information about the SDL2/Veldrid Window
+    /// </param>
+    /// <param name="mainWindowHandle">
+    ///     Handle to the <see cref="MainWindow"/> associated with this Backend
+    /// </param>
     public WindowBackend(WindowCreateInfo windowCreateInfo, MainWindow mainWindowHandle)
     {
-        _mainWindow = mainWindowHandle;
+        var mainWindow = mainWindowHandle;
         VeldridStartup.CreateWindowAndGraphicsDevice(
             windowCreateInfo,
             new GraphicsDeviceOptions(true, null, true, ResourceBindingModel.Improved, true, true),
@@ -42,7 +67,7 @@ public class WindowBackend : IDisposable
                 X = (float)Context.Window.Width, 
                 Y = (float)Context.Window.Height
             };
-            _mainWindow.Events.InvokeWindowResized(
+            mainWindow.Events.InvokeWindowResized(
                 Context.Window.Width,
                 Context.Window.Height);
         };
@@ -56,33 +81,41 @@ public class WindowBackend : IDisposable
         io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard |
                           ImGuiConfigFlags.DockingEnable;
         io.Fonts.Flags &= ~ImFontAtlasFlags.NoBakedLines;
-        // io.Fonts.Flags |= ImFontAtlasFlags.NoBakedLines;
     }
 
-    internal void PrepareRender()
+    /// <summary>
+    ///     Prepares the ImGui Context
+    /// </summary>
+    /// <remarks>
+    ///     Needs to be called <b>after</b> Font/Resource allocation!
+    /// </remarks>
+    internal void SetupContext()
     {
-        CreateDeviceResources(Context.GraphicsDevice, Context.GraphicsDevice.MainSwapchain.Framebuffer.OutputDescription);
+        CreateDeviceResources();
         SetPerFrameImGuiData(1f / 60f);
         ImGui.NewFrame();
         State.FrameBegun = true;
     }
     
-    public void CreateDeviceResources(GraphicsDevice gd, OutputDescription outputDescription)
+    /// <summary>
+    ///     Allocates Resources like Shaders and Buffers
+    /// </summary>
+    private void CreateDeviceResources()
     {
-        ResourceFactory factory = gd.ResourceFactory;
+        ResourceFactory factory = Context.GraphicsDevice.ResourceFactory;
         Context.VertexBuffer = factory.CreateBuffer(new BufferDescription(10000, BufferUsage.VertexBuffer | BufferUsage.Dynamic));
         Context.VertexBuffer.Name = "ImGui.NET Vertex Buffer";
         Context.IndexBuffer = factory.CreateBuffer(new BufferDescription(2000, BufferUsage.IndexBuffer | BufferUsage.Dynamic));
         Context.IndexBuffer.Name = "ImGui.NET Index Buffer";
-        RecreateFontDeviceTexture(gd);
+        RecreateFontDeviceTexture();
 
         Context.ProjectionBuffer = factory.CreateBuffer(new BufferDescription(64, BufferUsage.UniformBuffer | BufferUsage.Dynamic));
         Context.ProjectionBuffer.Name = "ImGui.NET Projection Buffer";
 
-        byte[] vertexShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-vertex", ShaderStages.Vertex);
-        byte[] fragmentShaderBytes = LoadEmbeddedShaderCode(gd.ResourceFactory, "imgui-frag", ShaderStages.Fragment);
-        Context.VertexShader = factory.CreateShader(new ShaderDescription(ShaderStages.Vertex, vertexShaderBytes, gd.BackendType == GraphicsBackend.Metal ? "VS" : "main"));
-        Context.FragmentShader = factory.CreateShader(new ShaderDescription(ShaderStages.Fragment, fragmentShaderBytes, gd.BackendType == GraphicsBackend.Metal ? "FS" : "main"));
+        byte[] vertexShaderBytes = LoadEmbeddedShaderCode( "imgui-vertex", ShaderStages.Vertex);
+        byte[] fragmentShaderBytes = LoadEmbeddedShaderCode("imgui-frag", ShaderStages.Fragment);
+        Context.VertexShader = factory.CreateShader(new ShaderDescription(ShaderStages.Vertex, vertexShaderBytes, Context.GraphicsDevice.BackendType == GraphicsBackend.Metal ? "VS" : "main"));
+        Context.FragmentShader = factory.CreateShader(new ShaderDescription(ShaderStages.Fragment, fragmentShaderBytes, Context.GraphicsDevice.BackendType == GraphicsBackend.Metal ? "FS" : "main"));
 
         VertexLayoutDescription[] vertexLayouts = new VertexLayoutDescription[]
         {
@@ -105,27 +138,26 @@ public class WindowBackend : IDisposable
             PrimitiveTopology.TriangleList,
             new ShaderSetDescription(vertexLayouts, new[] { Context.VertexShader, Context.FragmentShader}),
             new ResourceLayout[] {Context.ResLayout, Context.TexLayout},
-            outputDescription,
+            Context.GraphicsDevice.MainSwapchain.Framebuffer.OutputDescription,
             ResourceBindingModel.Default);
         Context.Pipeline = factory.CreateGraphicsPipeline(ref pd);
 
-        Context.MainResourceSet= factory.CreateResourceSet(new ResourceSetDescription(Context.ResLayout,
+        Context.MainResourceSet = factory.CreateResourceSet(new ResourceSetDescription(Context.ResLayout,
             Context.ProjectionBuffer,
-            gd.PointSampler));
+            Context.GraphicsDevice.PointSampler));
 
         Context.FontTextureResourceSet = factory.CreateResourceSet(new ResourceSetDescription(Context.TexLayout, Context.FontTextureView));
     }
 
     /// <summary>
-    /// Gets or creates a handle for a texture to be drawn with ImGui.
-    /// Pass the returned handle to Image() or ImageButton().
+    ///     Returns or Creates a ImGui Binding for a <see cref="TextureView"/>
     /// </summary>
-    public IntPtr GetOrCreateImGuiBinding(ResourceFactory factory, TextureView textureView)
+    public IntPtr GetOrCreateImGuiBinding(TextureView textureView)
     {
         if (!Context.SetsByView.TryGetValue(textureView, out ResourceSetInfo rsi))
         {
-            ResourceSet resourceSet = factory.CreateResourceSet(new ResourceSetDescription(Context.TexLayout, textureView));
-            rsi = new ResourceSetInfo(GetNextImGuiBindingID(), resourceSet);
+            ResourceSet resourceSet = Context.GraphicsDevice.ResourceFactory.CreateResourceSet(new ResourceSetDescription(Context.TexLayout, textureView));
+            rsi = new ResourceSetInfo(NextId, resourceSet);
 
             Context.SetsByView.Add(textureView, rsi);
             Context.ViewsById.Add(rsi.ImGuiBinding, rsi);
@@ -134,32 +166,32 @@ public class WindowBackend : IDisposable
 
         return rsi.ImGuiBinding;
     }
-
-    private IntPtr GetNextImGuiBindingID()
-    {
-        int newID = State.LastAssignedId++;
-        return (IntPtr)newID;
-    }
-
+    
     /// <summary>
-    /// Gets or creates a handle for a texture to be drawn with ImGui.
-    /// Pass the returned handle to Image() or ImageButton().
+    ///     Returns or Creates a ImGui Binding for a <see cref="Texture"/>
     /// </summary>
-    public IntPtr GetOrCreateImGuiBinding(ResourceFactory factory, Texture texture)
+    public IntPtr GetOrCreateImGuiBinding(Texture texture)
     {
         if (!Context.AutoViewsByTexture.TryGetValue(texture, out TextureView textureView))
         {
-            textureView = factory.CreateTextureView(texture);
+            textureView = Context.GraphicsDevice.ResourceFactory.CreateTextureView(texture);
             Context.AutoViewsByTexture.Add(texture, textureView);
             Context.OwnedResources.Add(textureView);
         }
 
-        return GetOrCreateImGuiBinding(factory, textureView);
+        return GetOrCreateImGuiBinding(textureView);
+        
     }
 
     /// <summary>
-    /// Retrieves the shader texture binding for the given helper handle.
+    ///     Returns a Resource Set for the specified ImGui Binding
     /// </summary>
+    /// <param name="imGuiBinding">
+    ///     ImGui Binding ID
+    /// </param>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown if no Resource Set for the specified Binding Id exists
+    /// </exception>
     public ResourceSet GetImageResourceSet(IntPtr imGuiBinding)
     {
         if (!Context.ViewsById.TryGetValue(imGuiBinding, out ResourceSetInfo tvi))
@@ -170,50 +202,56 @@ public class WindowBackend : IDisposable
         return tvi.ResourceSet;
     }
 
-    private byte[] LoadEmbeddedShaderCode(ResourceFactory factory, string name, ShaderStages stage)
+    /// <summary>
+    ///     Loads the embedded shader code for the specified name and shader stage.
+    ///     The backend is determined using <see cref="Veldrid.GraphicsDevice.BackendType"/> 
+    ///     via <c>WindowBackend.Context.GraphicsDevice.ResourceFactory.BackendType</c>.
+    /// </summary>
+    /// <param name="name">The name of the embedded shader.</param>
+    /// <param name="stage">The shader stage (e.g., Vertex, Fragment).</param>
+    /// <returns>The source code of the shader as a string.</returns>
+    /// <exception cref="System.NotImplementedException">
+    ///     Thrown if the method is not implemented for the specified backend.
+    /// </exception>
+    private byte[] LoadEmbeddedShaderCode(string name, ShaderStages stage)
     {
-        switch (factory.BackendType)
+        string resourceName;
+        switch (Context.GraphicsDevice.ResourceFactory.BackendType)
         {
             case GraphicsBackend.Direct3D11:
             {
-                string resourceName = name + ".hlsl.bytes";
-                return GetEmbeddedResourceBytes(resourceName);
+                resourceName = name + ".hlsl.bytes";
+                break;
             }
             case GraphicsBackend.OpenGL:
             {
-                string resourceName = name + ".glsl";
-                return GetEmbeddedResourceBytes(resourceName);
+                resourceName = name + ".glsl";
+                break;
             }
             case GraphicsBackend.Vulkan:
             {
-                string resourceName = name + ".spv";
-                return GetEmbeddedResourceBytes(resourceName);
+                resourceName = name + ".spv";
+                break;
             }
             case GraphicsBackend.Metal:
             {
-                string resourceName = name + ".metallib";
-                return GetEmbeddedResourceBytes(resourceName);
+                resourceName = name + ".metallib";
+                break;
             }
             default:
                 throw new NotImplementedException();
         }
-    }
-
-    private byte[] GetEmbeddedResourceBytes(string resourceName)
-    {
-        Assembly assembly = typeof(WindowBackend).Assembly;
-        using (Stream s = assembly.GetManifestResourceStream(resourceName))
-        {
-            byte[] ret = new byte[s.Length];
-            s.Read(ret, 0, (int)s.Length);
-            return ret;
-        }
+        
+        return EmbeddedResourceManager.GetEmbeddedResourceBytes<WindowBackend>(resourceName);
     }
 
     /// <summary>
-    /// Recreates the device texture used to render text.
+    ///     Recreates the Font Texture
     /// </summary>
-    public void RecreateFontDeviceTexture(GraphicsDevice gd)
+    /// <remarks>
+    ///     Needs to be called <b>after</b> loading/changing Fonts
+    /// </remarks>
+    public void RecreateFontDeviceTexture()
     {
         ImGuiIOPtr io = ImGui.GetIO();
         // Build
@@ -223,7 +261,7 @@ public class WindowBackend : IDisposable
         // Store our identifier
         io.Fonts.SetTexID(State.FontAtlasId);
 
-        Context.FontTexture = gd.ResourceFactory.CreateTexture(TextureDescription.Texture2D(
+        Context.FontTexture = Context.GraphicsDevice.ResourceFactory.CreateTexture(TextureDescription.Texture2D(
             (uint)width,
             (uint)height,
             1,
@@ -231,7 +269,7 @@ public class WindowBackend : IDisposable
             PixelFormat.R8_G8_B8_A8_UNorm,
             TextureUsage.Sampled));
         Context.FontTexture.Name = "ImGui.NET Font Texture";
-        gd.UpdateTexture(
+        Context.GraphicsDevice.UpdateTexture(
             Context.FontTexture,
             pixels,
             (uint)(bytesPerPixel * width * height),
@@ -243,11 +281,14 @@ public class WindowBackend : IDisposable
             1,
             0,
             0);
-        Context.FontTextureView = gd.ResourceFactory.CreateTextureView(Context.FontTexture);
+        Context.FontTextureView = Context.GraphicsDevice.ResourceFactory.CreateTextureView(Context.FontTexture);
 
         io.Fonts.ClearTexData();
     }
 
+    /// <summary>
+    ///     Submits Draw Commands to the Backend Renderer
+    /// </summary>
     public void Submit()
     {
         Context.CommandList.Begin();
@@ -261,25 +302,26 @@ public class WindowBackend : IDisposable
     }
     
     /// <summary>
-    /// Renders the ImGui draw list data.
-    /// This method requires a <see cref="GraphicsDevice"/> because it may create new DeviceBuffers if the size of vertex
-    /// or index data has increased beyond the capacity of the existing buffers.
-    /// A <see cref="CommandList"/> is needed to submit drawing and resource update commands.
+    ///     Renders ImGui Draw Data
     /// </summary>
     private void Render()
     {
-        if (State.FrameBegun)
-        {
-            State.FrameBegun = false;
-            ImGui.Render();
-            RenderImDrawData(ImGui.GetDrawData(), Context.GraphicsDevice, Context.CommandList);
-        }
+        if (!State.FrameBegun) return;
+        State.FrameBegun = false;
+        ImGui.Render();
+        RenderImDrawData(ImGui.GetDrawData());
     }
 
     /// <summary>
-    /// Updates ImGui input and IO configuration state.
+    ///     Updates the Input I/O State with the current Input Snapshot
     /// </summary>
-    public void Update(float deltaSeconds, InputSnapshot snapshot)
+    /// <param name="deltaSeconds">
+    ///     Frame Time as Delta-Time
+    /// </param>
+    /// <param name="snapshot">
+    ///     Input Snapshot
+    /// </param>
+    public void UpdateInput(float deltaSeconds, InputSnapshot snapshot)
     {
         State.RenderingBegun = true;
         if (State.FrameBegun)
@@ -295,9 +337,9 @@ public class WindowBackend : IDisposable
     }
 
     /// <summary>
-    /// Sets per-frame data based on the associated window.
-    /// This is called by Update(float).
+    ///     Sets the Per-Frame ImGui Data
     /// </summary>
+    /// <param name="deltaSeconds"></param>
     private void SetPerFrameImGuiData(float deltaSeconds)
     {
         ImGuiIOPtr io = ImGui.GetIO();
@@ -308,6 +350,9 @@ public class WindowBackend : IDisposable
         io.DeltaTime = deltaSeconds; // DeltaTime is in seconds.
     }
 
+    /// <summary>
+    ///     Attempts to map SDL2/Veldrid Keys to ImGui Keys
+    /// </summary>
     private bool TryMapKey(Key key, out ImGuiKey result)
     {
         ImGuiKey KeyToImGuiKeyShortcut(Key keyToConvert, Key startKey1, ImGuiKey startKey2)
@@ -370,6 +415,9 @@ public class WindowBackend : IDisposable
         return result != ImGuiKey.None;
     }
 
+    /// <summary>
+    ///     Updates ImGui Input Data
+    /// </summary>
     private void UpdateImGuiInput(InputSnapshot snapshot)
     {
         ImGuiIOPtr io = ImGui.GetIO();
@@ -380,14 +428,13 @@ public class WindowBackend : IDisposable
         io.AddMouseButtonEvent(3, snapshot.IsMouseDown(MouseButton.Button1));
         io.AddMouseButtonEvent(4, snapshot.IsMouseDown(MouseButton.Button2));
         io.AddMouseWheelEvent(0f, snapshot.WheelDelta);
-        for (int i = 0; i < snapshot.KeyCharPresses.Count; i++)
+        foreach (var t in snapshot.KeyCharPresses)
         {
-            io.AddInputCharacter(snapshot.KeyCharPresses[i]);
+            io.AddInputCharacter(t);
         }
 
-        for (int i = 0; i < snapshot.KeyEvents.Count; i++)
+        foreach (var keyEvent in snapshot.KeyEvents)
         {
-            KeyEvent keyEvent = snapshot.KeyEvents[i];
             if (TryMapKey(keyEvent.Key, out ImGuiKey imguikey))
             {
                 io.AddKeyEvent(imguikey, keyEvent.Down);
@@ -395,41 +442,47 @@ public class WindowBackend : IDisposable
         }
     }
 
-    private void RenderImDrawData(ImDrawDataPtr draw_data, GraphicsDevice gd, CommandList cl)
+    /// <summary>
+    ///     Renders the current ImGui Draw Data
+    /// </summary>
+    /// <param name="drawData">
+    ///     ImGui Draw Data
+    /// </param>
+    private void RenderImDrawData(ImDrawDataPtr drawData)
     {
         uint vertexOffsetInVertices = 0;
         uint indexOffsetInElements = 0;
 
-        if (draw_data.CmdListsCount == 0)
+        if (drawData.CmdListsCount == 0)
         {
             return;
         }
 
-        uint totalVBSize = (uint)(draw_data.TotalVtxCount * Unsafe.SizeOf<ImDrawVert>());
+        uint totalVBSize = (uint)(drawData.TotalVtxCount * Unsafe.SizeOf<ImDrawVert>());
         if (totalVBSize > Context.VertexBuffer.SizeInBytes)
         {
-            gd.DisposeWhenIdle(Context.VertexBuffer);
-            Context.VertexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalVBSize * 1.5f), BufferUsage.VertexBuffer | BufferUsage.Dynamic));
+            Context.GraphicsDevice.DisposeWhenIdle(Context.VertexBuffer);
+            Context.VertexBuffer = Context.GraphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalVBSize * 1.5f), BufferUsage.VertexBuffer | BufferUsage.Dynamic));
         }
 
-        uint totalIBSize = (uint)(draw_data.TotalIdxCount * sizeof(ushort));
+        uint totalIBSize = (uint)(drawData.TotalIdxCount * sizeof(ushort));
         if (totalIBSize > Context.IndexBuffer.SizeInBytes)
         {
-            gd.DisposeWhenIdle(Context.IndexBuffer);
-            Context.IndexBuffer = gd.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalIBSize * 1.5f), BufferUsage.IndexBuffer | BufferUsage.Dynamic));
+            Context.GraphicsDevice.DisposeWhenIdle(Context.IndexBuffer);
+            Context.IndexBuffer = Context.GraphicsDevice.ResourceFactory.CreateBuffer(new BufferDescription((uint)(totalIBSize * 1.5f), BufferUsage.IndexBuffer | BufferUsage.Dynamic));
         }
 
-        for (int i = 0; i < draw_data.CmdListsCount; i++)
+        for (int i = 0; i < drawData.CmdListsCount; i++)
         {
-            ImDrawListPtr cmd_list = draw_data.CmdLists[i];
+            ImDrawListPtr cmd_list = drawData.CmdLists[i];
 
-            cl.UpdateBuffer(
+            Context.CommandList.UpdateBuffer(
                 Context.VertexBuffer,
                 vertexOffsetInVertices * (uint)Unsafe.SizeOf<ImDrawVert>(),
                 cmd_list.VtxBuffer.Data,
                 (uint)(cmd_list.VtxBuffer.Size * Unsafe.SizeOf<ImDrawVert>()));
 
-            cl.UpdateBuffer(
+            Context.CommandList.UpdateBuffer(
                 Context.IndexBuffer,
                 indexOffsetInElements * sizeof(ushort),
                 cmd_list.IdxBuffer.Data,
@@ -451,19 +504,19 @@ public class WindowBackend : IDisposable
 
         Context.GraphicsDevice.UpdateBuffer(Context.ProjectionBuffer, 0, ref mvp);
 
-        cl.SetVertexBuffer(0, Context.VertexBuffer);
-        cl.SetIndexBuffer(Context.IndexBuffer, IndexFormat.UInt16);
-        cl.SetPipeline(Context.Pipeline);
-        cl.SetGraphicsResourceSet(0, Context.MainResourceSet);
+        Context.CommandList.SetVertexBuffer(0, Context.VertexBuffer);
+        Context.CommandList.SetIndexBuffer(Context.IndexBuffer, IndexFormat.UInt16);
+        Context.CommandList.SetPipeline(Context.Pipeline);
+        Context.CommandList.SetGraphicsResourceSet(0, Context.MainResourceSet);
 
-        draw_data.ScaleClipRects(io.DisplayFramebufferScale);
+        drawData.ScaleClipRects(io.DisplayFramebufferScale);
 
         // Render command lists
         int vtx_offset = 0;
         int idx_offset = 0;
-        for (int n = 0; n < draw_data.CmdListsCount; n++)
+        for (int n = 0; n < drawData.CmdListsCount; n++)
         {
-            ImDrawListPtr cmd_list = draw_data.CmdLists[n];
+            ImDrawListPtr cmd_list = drawData.CmdLists[n];
             for (int cmd_i = 0; cmd_i < cmd_list.CmdBuffer.Size; cmd_i++)
             {
                 ImDrawCmdPtr pcmd = cmd_list.CmdBuffer[cmd_i];
@@ -477,22 +530,22 @@ public class WindowBackend : IDisposable
                     {
                         if (pcmd.TextureId == State.FontAtlasId)
                         {
-                            cl.SetGraphicsResourceSet(1, Context.FontTextureResourceSet);
+                            Context.CommandList.SetGraphicsResourceSet(1, Context.FontTextureResourceSet);
                         }
                         else
                         {
-                            cl.SetGraphicsResourceSet(1, GetImageResourceSet(pcmd.TextureId));
+                            Context.CommandList.SetGraphicsResourceSet(1, GetImageResourceSet(pcmd.TextureId));
                         }
                     }
 
-                    cl.SetScissorRect(
+                    Context.CommandList.SetScissorRect(
                         0,
                         (uint)pcmd.ClipRect.X,
                         (uint)pcmd.ClipRect.Y,
                         (uint)(pcmd.ClipRect.Z - pcmd.ClipRect.X),
                         (uint)(pcmd.ClipRect.W - pcmd.ClipRect.Y));
 
-                    cl.DrawIndexed(pcmd.ElemCount, 1, pcmd.IdxOffset + (uint)idx_offset, (int)pcmd.VtxOffset + vtx_offset, 0);
+                    Context.CommandList.DrawIndexed(pcmd.ElemCount, 1, pcmd.IdxOffset + (uint)idx_offset, (int)pcmd.VtxOffset + vtx_offset, 0);
                 }
             }
             vtx_offset += cmd_list.VtxBuffer.Size;
@@ -500,11 +553,5 @@ public class WindowBackend : IDisposable
         }
     }
 
-    /// <summary>
-    /// Frees all graphics resources used by the renderer.
-    /// </summary>
-    public void Dispose()
-    {
-        Context.Dispose();
-    }
+    public void Dispose() => Context.Dispose();
 }

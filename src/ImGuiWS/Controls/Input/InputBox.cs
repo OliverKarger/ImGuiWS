@@ -18,8 +18,12 @@ public class InputBox<T> : ValueControl<T>
     {
         Label = label;
     }
-    
-    public override void Render()
+
+    public override void Start()
+    {
+    }
+
+    public override void Update()
     {
         switch (Type.GetTypeCode(typeof(T)))
         {
@@ -149,5 +153,9 @@ public class InputBox<T> : ValueControl<T>
             default:
                 throw new NotImplementedException($"Type {typeof(T).Name} is not implemented!");
         }
+    }
+
+    public override void Shutdown()
+    {
     }
 }
