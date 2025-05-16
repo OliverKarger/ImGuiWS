@@ -15,17 +15,17 @@ public enum WindowRenderMode
 /// <summary>
 ///     Base Class for all Windows
 /// </summary>
-public class Window : IRenderable
+public class Window(string label) : IRenderable
 {
     private readonly ILogger _logger = LoggerFactory.Create<Window>();
-    
+
     /// <summary>
     ///     ImGui ID
     /// </summary>
     /// <remarks>
     ///     Automatically inferred from Label
     /// </remarks>
-    public string Id { get; internal set; }
+    public string Id { get; internal set; } = label.ToControlId();
     
     /// <summary>
     ///     Window Controls
@@ -50,7 +50,7 @@ public class Window : IRenderable
     /// <summary>
     ///     Window Render Mode
     /// </summary>
-    public WindowRenderMode RenderMode { get; set; } = WindowRenderMode.ControlsFirst;
+    public WindowRenderMode RenderMode { get; set; } = WindowRenderMode.SubWindowsFirst;
     
     /// <summary>
     ///     Wether the Window is open or not
@@ -66,20 +66,11 @@ public class Window : IRenderable
     ///     Invoked when Window is closed
     /// </summary>
     public event Action OnClosed;
-    
+
     /// <summary>
     ///     Window Label / Title
     /// </summary>
-    public string Label { get; set; }
-
-    public Window(string label)
-    {
-        _logger.Information("Initializing new Window {label}", label);
-        Id = label.ToControlId();
-        Label = label;
-        Controls = new WindowControlsCollection(RootWindow, this);
-        Windows = new WindowCollection(RootWindow, this);
-    }
+    public string Label { get; set; } = label;
 
     /// <summary>
     ///     Will be executed when Window is first registered
@@ -89,16 +80,22 @@ public class Window : IRenderable
     /// </remarks>
     public virtual void Start()
     {
-        if (RenderMode == WindowRenderMode.ControlsFirst)
+        _logger.Debug("Initializing Controls ({controlCount}) and SubWindows ({subWindowCount}) using {mode} for {windowName}", 
+            Controls.Count,
+            Windows.Count,
+            RenderMode,
+            Id);
+        
+        switch (RenderMode)
         {
-            Controls.Start();
-            Windows.Start();
-        }
-
-        if (RenderMode == WindowRenderMode.SubWindowsFirst)
-        {
-            Windows.Update();
-            Controls.Update();
+            case WindowRenderMode.ControlsFirst:
+                Controls.Start();
+                Windows.Start();
+                break;
+            case WindowRenderMode.SubWindowsFirst:
+                Windows.Update();
+                Controls.Update();
+                break;
         }
     }
 
@@ -111,33 +108,24 @@ public class Window : IRenderable
     public virtual void Update()
     {
         bool open = Open;
-        bool beginSucceeded = ImGui.Begin(Label, ref open);
-
-        if (open != Open)
+        if (ImGui.Begin(Label, ref open))
         {
             Open = open;
-            if (Open)
-                OnOpened?.Invoke();
-            else
-                OnClosed?.Invoke();
-        }
 
-        if (beginSucceeded)
-        {
-            if (RenderMode == WindowRenderMode.ControlsFirst)
+            switch (RenderMode)
             {
-                Controls.Update();
-                Windows.Update();
-            }
-
-            if (RenderMode == WindowRenderMode.SubWindowsFirst)
-            {
-                Windows.Update();
-                Controls.Update();
+                case WindowRenderMode.ControlsFirst:
+                    Controls.Update();
+                    Windows.Update();
+                    break;
+                case WindowRenderMode.SubWindowsFirst:
+                    Windows.Update();
+                    Controls.Update();
+                    break;
             }
         }
 
-        ImGui.End(); // Always call End if Begin was called
+        ImGui.End();
     }
 
     /// <summary>
@@ -145,16 +133,16 @@ public class Window : IRenderable
     /// </summary>
     public virtual void Shutdown()
     {
-        if (RenderMode == WindowRenderMode.ControlsFirst)
+        switch (RenderMode)
         {
-            Controls.Start();
-            Windows.Start();
-        }
-
-        if (RenderMode == WindowRenderMode.SubWindowsFirst)
-        {
-            Windows.Update();
-            Controls.Update();
+            case WindowRenderMode.ControlsFirst:
+                Controls.Start();
+                Windows.Start();
+                break;
+            case WindowRenderMode.SubWindowsFirst:
+                Windows.Update();
+                Controls.Update();
+                break;
         }
     }
 }

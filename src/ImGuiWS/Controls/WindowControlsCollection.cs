@@ -10,36 +10,29 @@ namespace ImGuiWS;
 
 public class WindowControlsCollection(MainWindow rootWindow, Window? directParent) : RenderObjectCollection<ControlBase>(rootWindow, directParent)
 {
-    private readonly HashSet<ControlBase> Controls = new HashSet<ControlBase>();
-    public Window? DirectParent { get; internal set; } = directParent;
-    public MainWindow RootWindow { get; internal set; } = rootWindow;
     private readonly ILogger _logger = LoggerFactory.Create<WindowControlsCollection>();
-    
-    
-    public override WindowControlsCollection Add<TDerived>(TDerived control)
-    {
-        if (Controls.Any(e => e.Id == control.Id))
-        {
-           throw new DuplicateNameException("Duplicate control name/id"); 
-        }
 
-        control.DirectParent = DirectParent;
+    public override WindowControlsCollection Add<T>(Func<T> factory, Action<T>? configure)
+    {
+        T? control = factory();
+        
         control.RootWindow = RootWindow;
-        Controls.Add(control);
+        control.DirectParent = DirectParent;
+        
+        configure?.Invoke(control);
+        
+        if (_objects.Any(e => e.Id == control.Id))
+        {
+            throw new DuplicateNameException("Duplicate control name/id"); 
+        }
+        
         _logger.Information("Added Control {id} to Window {window}", control.Id, DirectParent?.Id ?? RootWindow.Id);
         return this;
     }
 
-    public override WindowControlsCollection Add<T>(Func<T> factory, Action<T>? configure)
-    {
-        T control = factory();
-        configure?.Invoke(control);
-        return Add(control);
-    }
-
     public T GetById<T>(string id) where T : ControlBase
     {
-        var found = Controls.FirstOrDefault(e => e.Id == id);
+        var found = _objects.FirstOrDefault(e => e.Id == id);
 
         if (found == null)
         {
@@ -60,7 +53,7 @@ public class WindowControlsCollection(MainWindow rootWindow, Window? directParen
     }
     public override void Start()
     {
-        foreach (var control in Controls)
+        foreach (var control in _objects)
         {
             control.Start();
             _logger.Information("Initialized Control {id} of Window {window}", control.Id, DirectParent?.Id ?? RootWindow.Id);
@@ -69,7 +62,7 @@ public class WindowControlsCollection(MainWindow rootWindow, Window? directParen
 
     public override void Update()
     {
-        foreach (var control in Controls)
+        foreach (var control in _objects)
         {
             if (control.Visible)
             {
@@ -82,7 +75,7 @@ public class WindowControlsCollection(MainWindow rootWindow, Window? directParen
 
     public override void Shutdown()
     {
-        foreach (var control in Controls)
+        foreach (var control in _objects)
         {
             control.Shutdown();
             _logger.Information("Destroyed Control {id} of Window {window}", control.Id, DirectParent?.Id ?? RootWindow.Id);

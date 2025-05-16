@@ -19,35 +19,25 @@ public class WindowCollection(MainWindow rootWindow, Window? parent) : RenderObj
     /// <summary>
     ///     Adds a new Window
     /// </summary>
-    /// <param name="window">
-    ///     Window Object. Id must be unique!
-    /// </param>
-    /// <returns></returns>
-    /// <exception cref="DuplicateNameException">
-    ///     Thrown when a Window with the same Id already exists
-    /// </exception>
-    public override WindowCollection Add<Window>(Window obj)
+    public override WindowCollection Add<Window>(Func<Window> factory, Action<Window>? configure)
     {
-        if (_objects.Any(e => e.Id == obj.Id))
+        Window window = factory();
+        
+        window.RootWindow = RootWindow;
+        window.DirectParent = DirectParent;
+        window.Controls = new WindowControlsCollection(RootWindow, DirectParent);
+        window.Windows = new WindowCollection(RootWindow, DirectParent);
+        
+        configure?.Invoke(window);
+        
+        if (_objects.Any(e => e.Id == window.Id))
         {
             throw new DuplicateNameException("Duplicate SubWindow name/id");
         }
-
-        obj.RootWindow = RootWindow;
-        obj.DirectParent = DirectParent;
-        _objects.Add(obj);
-        _logger.Information("Added Window {windowName}", obj.Label);
+        
+        _objects.Add(window);
+        _logger.Information("Added Window {windowName}", window.Label);
         return this;
-    }
-
-    /// <summary>
-    ///     Adds a new Window
-    /// </summary>
-    public override WindowCollection Add<Window>(Func<Window> factory, Action<Window> configure)
-    {
-        Window window = factory();
-        configure(window);
-        return Add(window);
     }
 
     public override void Start()

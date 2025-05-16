@@ -15,7 +15,6 @@ public class MainWindow : Window
     protected internal WindowBackend Backend { get; set; }
     protected internal WindowEvents Events { get; set; } = new();
     protected internal WindowUtils Utils { get; set; }
-
     public WindowRenderMode RenderMode { get; set; } = WindowRenderMode.ControlsFirst;
     
     protected internal Stopwatch Stopwatch = Stopwatch.StartNew();
@@ -31,17 +30,18 @@ public class MainWindow : Window
 
     public MainWindow(WindowCreateInfo createInfo) : base("MainWindow")
     {
-        RootWindow = this;
-        DirectParent = this;
-        Backend = new WindowBackend(createInfo, RootWindow);
-        Utils = new WindowUtils(Backend, RootWindow);
-        Controls = new WindowControlsCollection(RootWindow, DirectParent);
-        Windows = new WindowCollection(RootWindow, DirectParent);
+        Backend = new WindowBackend(createInfo, this);
+        Events = new WindowEvents();
+        Utils = new WindowUtils(Backend, this);
+
+        Controls = new WindowControlsCollection(this, null);
+        Windows = new WindowCollection(this, null);
     }
 
     public override void Start()
     {
         UserStart();
+        Backend.SetupContext();
         
         switch (RenderMode)
         {
@@ -54,8 +54,6 @@ public class MainWindow : Window
                 Controls.Start();
                 break;
         }
-        
-        Backend.SetupContext();
     }
     
     public override void Update()
@@ -85,13 +83,14 @@ public class MainWindow : Window
 
     public void RenderLoop()
     {
+
         Start();
 
         while (WindowExists)
         {
             Update();
         }
-        
+
         Shutdown();
     }
     
@@ -110,7 +109,7 @@ public class MainWindow : Window
                 Controls.Shutdown();
                 break;
         }
-
+        
         Backend.Dispose();
     }
 
