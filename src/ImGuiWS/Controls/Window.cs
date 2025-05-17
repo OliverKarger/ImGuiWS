@@ -34,7 +34,7 @@ public class WindowOptions
 /// <summary>
 ///     Base Class for all Windows
 /// </summary>
-public class Window(string label) : IRenderable
+public class Window(string label) : ControlBase(label.ToControlId())
 {
     private readonly ILogger _logger = LoggerFactory.Create<Window>(label);
 
@@ -49,14 +49,6 @@ public class Window(string label) : IRenderable
     private bool _stylesApplied { get; set; } = false;
     
     /// <summary>
-    ///     ImGui ID
-    /// </summary>
-    /// <remarks>
-    ///     Automatically inferred from Label
-    /// </remarks>
-    public string Id { get; internal set; } = label.ToControlId();
-    
-    /// <summary>
     ///     Window Controls
     /// </summary>
     public WindowControlsCollection Controls { get; internal set; }
@@ -65,16 +57,6 @@ public class Window(string label) : IRenderable
     ///     Sub Windows
     /// </summary>
     public WindowCollection Windows { get; internal set; }
-    
-    /// <summary>
-    ///     Handle to direct parent Window
-    /// </summary>
-    public Window? DirectParent { get; internal set; }
-    
-    /// <summary>
-    ///     Handle to Root Window
-    /// </summary>
-    public MainWindow RootWindow { get; internal set; }
     
     /// <summary>
     ///     Window Render Mode
@@ -97,7 +79,7 @@ public class Window(string label) : IRenderable
     /// <remarks>
     ///     Should be used for resource Allocations
     /// </remarks>
-    public virtual void Start()
+    public override void Start()
     {
         _logger.Debug("Initializing Controls ({controlCount}) and SubWindows ({subWindowCount}) using {mode} for {windowName}", 
             Controls.Count,
@@ -124,7 +106,7 @@ public class Window(string label) : IRenderable
     /// <remarks>
     ///     Should not be overriddenn unless you know what you're doing!
     /// </remarks>
-    public virtual void Update()
+    public override void Update()
     {
         if (Options.FixedSize || !_firstRenderDone)
         {
@@ -194,7 +176,7 @@ public class Window(string label) : IRenderable
     /// <summary>
     ///     Called when the Window Object is destroyed
     /// </summary>
-    public virtual void Shutdown()
+    public override void Shutdown()
     {
         switch (RenderMode)
         {

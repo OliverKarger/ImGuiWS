@@ -21,9 +21,9 @@ public abstract class ControlBase(string id) : IRenderable
     /// <summary>
     ///     Window, the Control is associated to
     /// </summary>
-    protected internal Window? DirectParent { get; set; }
+    public Window? DirectParent { get; internal set; }
 
-    protected internal MainWindow RootWindow { get; set; }
+    public MainWindow RootWindow { get; internal set; }
 
     public override bool Equals(object obj)
     {

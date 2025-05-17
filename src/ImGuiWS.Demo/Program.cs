@@ -26,7 +26,17 @@ class MyMainWindow() : MainWindow(new WindowCreateInfo(50, 50, 1680, 1024, Windo
                     item.OnClick += () => Environment.Exit(0);
                 });
 
-                menu.Items.Add(() => new NavbarItem("Item 2"), item => { });
+                menu.Items.Add(() => new NavbarItem("Item 2"), item =>
+                {
+                    item.OnClick += () =>
+                    {
+                        var window = item.RootWindow.Windows.Get<Window>("window_2");
+                        if (window != null)
+                        {
+                            window.Options.Open = false;
+                        }
+                    };
+                });
             });
         });
         
