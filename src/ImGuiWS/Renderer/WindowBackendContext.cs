@@ -24,7 +24,7 @@ public class WindowBackendContext : IDisposable
     public DeviceBuffer VertexBuffer { get; internal set; }
     public DeviceBuffer IndexBuffer { get; internal set; }
     public DeviceBuffer ProjectionBuffer { get; internal set; }
-    public Texture FontTexture { get; internal set; }
+    public FontTexture FontTexture { get; internal set; }
     public Shader VertexShader { get; internal set; }
     public Shader FragmentShader { get; internal set; }
     public ResourceLayout ResLayout { get; internal set; }
@@ -32,7 +32,6 @@ public class WindowBackendContext : IDisposable
     public Pipeline Pipeline { get; internal set; }
     public ResourceSet MainResourceSet { get; internal set; }
     public ResourceSet FontTextureResourceSet { get; internal set; }
-
     public TextureCollection Textures { get; internal set; } = new();
     
     public void Dispose()

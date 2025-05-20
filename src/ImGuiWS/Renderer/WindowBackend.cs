@@ -129,8 +129,6 @@ public class WindowBackend : IDisposable
         SetPerFrameImGuiData(1f / 60f);
         ImGui.NewFrame();
         State.FrameBegun = true;
-        // ImGui.GetFont().Scale = DpiScale;
-        ImGui.SetWindowFontScale(DpiScale);
         
         ImGuiStylePtr style = ImGui.GetStyle();
         style.WindowPadding = new Vector2(8);
@@ -373,6 +371,7 @@ public class WindowBackend : IDisposable
     {
         if (!State.FrameBegun) return;
         State.FrameBegun = false;
+        // ImGui.SetWindowFontScale(DpiScale);
         ImGui.Render();
         RenderImDrawData(ImGui.GetDrawData());
     }

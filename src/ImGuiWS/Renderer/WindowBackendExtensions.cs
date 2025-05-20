@@ -59,7 +59,7 @@ public static class WindowBackendExtensions
             ushort* ranges = (ushort*)io.Fonts.GetGlyphRangesDefault();
 
             byte* nativePath = (byte*)Marshal.StringToHGlobalAnsi(path);
-            ImGuiNative.ImFontAtlas_AddFontFromFileTTF(io.Fonts.NativePtr, nativePath, size, config, ranges);
+            ImFont* handle = ImGuiNative.ImFontAtlas_AddFontFromFileTTF(io.Fonts.NativePtr, nativePath, size, config, ranges);
 
             Marshal.FreeHGlobal((IntPtr)nativePath);
             // Marshal.FreeHGlobal(namePtr); // Free the name memory
@@ -70,6 +70,7 @@ public static class WindowBackendExtensions
             io.Fonts.GetTexDataAsRGBA32(out pixels, out width, out height, out bytesPerPixel);
 
             backend.RecreateFontDeviceTexture();
+            backend.Context.FontTexture.ImGuiBinding = (IntPtr)handle; 
         }
 
         backend.logger.Information("Loaded Font {path} ({size}px)", path, size);
