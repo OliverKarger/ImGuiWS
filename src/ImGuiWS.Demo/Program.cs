@@ -1,83 +1,82 @@
-﻿// See https://aka.ms/new-console-template for more information
-
-using System.Net.Mime;
-using System.Numerics;
+﻿using System.Numerics;
+using System.Runtime.CompilerServices;
 using ImGuiNET;
-using ImGuiWS.Controls;
-using ImGuiWS.Controls.Input;
-using ImGuiWS.Controls.Navigation;
+using ImGuiWS.Components;
+using ImGuiWS.Components.BuiltIn;
+using ImGuiWS.Components.Controls;
+using ImGuiWS.Components.Modals;
+using ImGuiWS.Components.Navigation;
+using ImGuiWS.Renderer;
+using Veldrid;
 using Veldrid.StartupUtilities;
+using Vortice.Direct3D11;
 using WindowState = Veldrid.WindowState;
 
-
 namespace ImGuiWS.Demo;
-
-class MyMainWindow() : MainWindow(new WindowCreateInfo(50, 50, 1680, 1024, WindowState.Normal, "Sample Window"))
-{
-    protected override void UserStart()
-    {
-        Controls.Add<Navbar>(() => new Navbar("Main Navbar"), navbar =>
-        {
-            navbar.Items.Add(() => new NavbarItem("Item 1"), item => { });
-            navbar.Menus.Add(() => new NavbarMenu("Application"), menu =>
-            {
-                menu.Items.Add(() => new NavbarItem("Exit", "Alt+F4"), item =>
-                {
-                    item.OnClick += () => Environment.Exit(0);
-                });
-
-                menu.Items.Add(() => new NavbarItem("Item 2"), item =>
-                {
-                    item.OnClick += () =>
-                    {
-                        var window = item.RootWindow.Windows.Get<Window>("window_2");
-                        if (window != null)
-                        {
-                            window.Options.Open = false;
-                        }
-                    };
-                });
-            });
-        });
-        
-        Windows.Add<Window>(() => new Window("Window 1"), window =>
-        {
-            window.Options.Position = new Vector2(250, 100);
-            window.Options.Size = new Vector2(175, 175);
-            window.Options.Collapsed = true;
-            window.Controls.Add<Button>(() => new Button("Test"), button =>
-            {
-                button.OnClick += () => Console.WriteLine("Button clicked!");
-            });
-        });
-
-        Windows.Add(() => new Window("Window 2"), window =>
-        {
-            window.Options.Position = new Vector2(500, 100);
-            window.Options.Size = new Vector2(175, 175);
-            window.Controls.Add<Checkbox>(() => new Checkbox("Test"), checkbox=>
-            {
-                checkbox.OnValueChanged += value => Console.WriteLine($"Checkbox Value: {value}");
-            });
-        });
-    }
-
-    protected override void UserUpdate()
-    {
-        ImGui.ShowDemoWindow();
-    }
-}
 
 public static class Program
 {
     public static void Main(string[] args)
     {
-        string imguiIniPath = Path.Join(Environment.CurrentDirectory, "imgui.ini");
-        if (File.Exists(imguiIniPath))
+        MainWindow window =
+            new MainWindow(new WindowSetupOptions("Example Window", new Vector2(1680, 1240), new Vector2(100, 100)));
+
+        window.Controls.Add(() => new DelegateControl("ImGui Demo Window"), control =>
         {
-            File.Delete(imguiIniPath);
+            control.Visible = false;
+            control.Delegate = () =>
+            {
+                bool visible = control.Visible;
+                ImGui.ShowDemoWindow(ref visible);
+                control.Visible = visible;
+            };
+        });
+
+        window.Controls.Add(() => new Modal("Hello World"), modal =>
+        {
+            modal.Controls.Add(() => new Button("Test"), button =>
+            {
+                button.OnClick += () => modal.Visible = false;
+            });
+        });
+        
+        window.Controls.Add(() => new MainMenuBar("main_mmb"), menuBar =>
+        {
+            menuBar.SubMenues.Add(() => new Menu("Application"), menu =>
+            {
+                menu.Items.Add(() => new MenuItem("Exit"), item =>
+                {
+                    item.OnClick += () => Environment.Exit(0);
+                });
+            });
+
+            menuBar.SubMenues.Add(() => new Menu("Developer"), menu =>
+            {
+                menu.SubMenues.Add(() => new Menu("ImGUI"), imguiMenu =>
+                {
+                    imguiMenu.Items.Add(() => new MenuItem("Demo Window"), item =>
+                    {
+                        item.OnClick += () =>
+                            item.MainWindow.FindComponent<DelegateControl>(e => e.Id == "imgui_demo_window")
+                                .ToggleVisibility();
+                    });
+                });
+
+                menu.Items.Add(() => new MenuItem("Test Modal"), menuItem =>
+                {
+                    menuItem.OnClick += () =>
+                    {
+                        menuItem.MainWindow.FindComponent<Modal>(m => m.Id == "hello_world").Visible = true;
+                    };
+                });
+            });
+        });
+        
+        window.Startup();
+        while (window.WindowExists)
+        {
+            window.Update(.0f);
         }
-        var window = new MyMainWindow();
-        window.RenderLoop();
+        window.Shutdown();
     }
 }

@@ -19,6 +19,7 @@ internal static class LoggerFactory
             );
         loggerConfiguration.MinimumLevel.Debug();
         loggerConfiguration.WriteTo.Console(outputTemplate: OutputTemplate);
+        loggerConfiguration.WriteTo.Sink<LogBufferSink>();
         return loggerConfiguration.CreateLogger().ForContext("SubContext", subContext ?? string.Empty);
     }
 }

@@ -25,7 +25,6 @@ public class WindowBackendContext : IDisposable
     public DeviceBuffer IndexBuffer { get; internal set; }
     public DeviceBuffer ProjectionBuffer { get; internal set; }
     public Texture FontTexture { get; internal set; }
-    public TextureView FontTextureView { get; internal set; }
     public Shader VertexShader { get; internal set; }
     public Shader FragmentShader { get; internal set; }
     public ResourceLayout ResLayout { get; internal set; }
@@ -34,13 +33,7 @@ public class WindowBackendContext : IDisposable
     public ResourceSet MainResourceSet { get; internal set; }
     public ResourceSet FontTextureResourceSet { get; internal set; }
 
-    public HashSet<IDisposable> OwnedResources { get; internal set; } = new();
-    
-    public Dictionary<TextureView, ResourceSetInfo> SetsByView { get; internal set; } = new();
-    public Dictionary<Texture, TextureView> AutoViewsByTexture { get; internal set; } = new();
-    public Dictionary<IntPtr, ResourceSetInfo> ViewsById { get; internal set; } = new();
-    
-    public HashSet<Font> Fonts { get; internal set; } = new();
+    public TextureCollection Textures { get; internal set; } = new();
     
     public void Dispose()
     {   
@@ -48,7 +41,6 @@ public class WindowBackendContext : IDisposable
         IndexBuffer?.Dispose();
         ProjectionBuffer?.Dispose();
         FontTexture?.Dispose();
-        FontTextureView?.Dispose();
         VertexShader?.Dispose();
         FragmentShader?.Dispose();
         ResLayout?.Dispose();
@@ -62,13 +54,6 @@ public class WindowBackendContext : IDisposable
 
     public void ClearCachedResources()
     {
-        OwnedResources?.ForEach(e => e.Dispose());
-        OwnedResources?.Clear();
-        
-        SetsByView?.Clear();
-        ViewsById?.Clear();
-        AutoViewsByTexture?.Clear();
-        ViewsById?.Clear();        
-        Fonts.Clear();
+        Textures.Clear();
     }
 }

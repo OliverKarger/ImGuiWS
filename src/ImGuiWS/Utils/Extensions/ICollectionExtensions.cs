@@ -13,4 +13,5 @@ public static class ICollectionExtensions
     {
         foreach (T item in collection) action(item);
     }
+
 }

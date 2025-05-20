@@ -40,12 +40,9 @@
   
   <!-- Fonts -->
   <ItemGroup>
-    <EmbeddedResource Include="Resources/fonts/Orbitron-Black.ttf" LogicalName="Orbitron-Black" />
-    <EmbeddedResource Include="Resources/fonts/Orbitron-Bold.ttf" LogicalName="Orbitron-Bold" />
-    <EmbeddedResource Include="Resources/fonts/Orbitron-ExtraBold.ttf" LogicalName="Orbitron-ExtraBold" />
-    <EmbeddedResource Include="Resources/fonts/Orbitron-Medium.ttf" LogicalName="Orbitron-Medium" />
-    <EmbeddedResource Include="Resources/fonts/Orbitron-Regular.ttf" LogicalName="Orbitron-Regular" />
-    <EmbeddedResource Include="Resources/fonts/Orbitron-SemiBold.ttf" LogicalName="Orbitron-SemiBold" />
+    <EmbeddedResource Include="Resources/fonts/Roboto-Regular.ttf" LogicalName="Roboto" />
+    <EmbeddedResource Include="Resources/fonts/fa-regular-400.ttf" LogicalName="FontAwesomeRegular" />
+    <EmbeddedResource Include="Resources/fonts/fa-solid-900.ttf" LogicalName="FontAwesomeSolid" />
   </ItemGroup>
 
 </Project>
