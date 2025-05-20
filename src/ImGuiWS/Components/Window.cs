@@ -46,6 +46,8 @@ public class Window : RenderableComponent
     /// </summary>
     public bool Collapsed { get; set; } = false;
     
+    public Vector2 ContentOrigin { get; set; } = Vector2.Zero;
+    
     #endregion
 
     private bool _firstRenderDone = false;
@@ -141,6 +143,8 @@ public class Window : RenderableComponent
             SubWindows.Update(delta);
             Controls.Update(delta);
 
+            ContentOrigin = ImGui.GetCursorScreenPos();
+            
             var newPos = ImGui.GetWindowPos();
             var newSize = ImGui.GetWindowSize();
 

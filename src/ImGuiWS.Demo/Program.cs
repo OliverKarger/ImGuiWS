@@ -7,6 +7,7 @@ using ImGuiWS.Components.Controls;
 using ImGuiWS.Components.Modals;
 using ImGuiWS.Components.Navigation;
 using ImGuiWS.Renderer;
+using ImGuiWS.Utils;
 using Veldrid;
 using Veldrid.StartupUtilities;
 using Vortice.Direct3D11;
@@ -21,6 +22,27 @@ public static class Program
         MainWindow window =
             new MainWindow(new WindowSetupOptions("Example Window", new Vector2(1680, 1240), new Vector2(100, 100)));
 
+        window.SubWindows.Add(() => new Window("Draw List Example"), window =>
+        {
+            window.Size = new Vector2(512, 512);
+            window.FixedSize = true;
+            window.FixedPosition = true;
+            window.Controls.Add(() => new DelegateControl("Draw List 1"), control =>
+            {
+                control.Visible = true;
+                control.Delegate += () =>
+                {
+                    var drawList = ImGui.GetWindowDrawList();
+
+                    Vector2 rectOrigin = window.ContentOrigin + new Vector2(100, 100); 
+                    Vector2 rectTarget = window.ContentOrigin + new Vector2(200, 200); 
+                
+                    drawList.AddRectFilled(rectOrigin, rectTarget, 0xFFFFFFFF);
+                    drawList.AddText(rectOrigin, 0xBBBBBBBB, "Hello!");
+                };
+            });
+        });
+        
         window.Controls.Add(() => new DelegateControl("ImGui Demo Window"), control =>
         {
             control.Visible = false;
