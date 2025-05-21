@@ -6,12 +6,20 @@ namespace ImGuiWS.Components.Controls;
 
 public class ListBox : Control
 {
+    #region Properties
+    /// <summary>
+    ///     Current Item List
+    /// </summary>
     public List<string> Items { get; internal set; } = new();
+    /// <summary>
+    ///     Index of the current Item
+    /// </summary>
     public int CurrentIndex { get; set; } = 0;
-
-    public Vector2 Size { get; set; } = Vector2.Zero;
-    
+    /// <summary>
+    ///     Label of the ListBox
+    /// </summary>
     public string Label { get; set; }
+    #endregion
     
     public ListBox(string label, Window window) : base(label.ToControlId(), window)
     {

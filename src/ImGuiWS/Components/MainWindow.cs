@@ -8,6 +8,10 @@ using Veldrid.StartupUtilities;
 
 namespace ImGuiWS.Components;
 
+/// <summary>
+///     Main Window Component
+///     Represents the Main Application Window
+/// </summary>
 public class MainWindow : Window
 {
     private Stopwatch _stopWatch = new Stopwatch();

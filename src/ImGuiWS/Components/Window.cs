@@ -1,8 +1,6 @@
 ﻿using System.Numerics;
 using ImGuiNET;
 using ImGuiWS.Components.Controls;
-using ImGuiWS.Components.Style;
-using ImGuiWS.Renderer;
 using ImGuiWS.Utils;
 
 namespace ImGuiWS.Components;

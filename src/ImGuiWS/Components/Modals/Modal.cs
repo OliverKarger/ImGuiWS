@@ -4,11 +4,22 @@ using ImGuiWS.Utils;
 
 namespace ImGuiWS.Components.Modals;
 
+/// <summary>
+///     Popup Modal Control
+/// </summary>
 public class Modal : Control
 {
+    #region Properties
+    /// <summary>
+    ///     Nested Controls
+    /// </summary>
     public WindowComponentCollection<Control> Controls { get; set; }
     
+    /// <summary>
+    ///     Label of the Control
+    /// </summary>
     public string Label { get; set; }
+    #endregion
     
     public Modal(string title) : base(title.ToControlId())
     {

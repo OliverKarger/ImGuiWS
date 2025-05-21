@@ -5,6 +5,9 @@ using Serilog.Events;
 
 namespace ImGuiWS.Logging;
 
+/// <summary>
+///     Enriches a Serilog <see cref="LogEvent"/> with Caller Method Name, File Name and Class Name
+/// </summary>
 public class CallerEnricher : ILogEventEnricher
 {
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)

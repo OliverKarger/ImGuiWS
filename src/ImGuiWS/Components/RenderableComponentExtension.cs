@@ -4,8 +4,27 @@ using ImGuiWS.Components.Controls;
 
 namespace ImGuiWS.Components;
 
+/// <summary>
+///     Extensions to <see cref="RenderableComponent"/>
+/// </summary>
 public static class RenderableComponentSearchExtensions
 {
+    /// <summary>
+    ///     Searches for a <see cref="RenderableComponent"/> of type <typeparamref name="T"/>
+    ///     starting at <paramref name="window"/> including all sub-windows and components
+    /// </summary>
+    /// <param name="window">
+    ///     Window as starting Place
+    /// </param>
+    /// <param name="predicate">
+    ///     Predicate to match the Component against
+    /// </param>
+    /// <typeparam name="T">
+    ///     Type to match the Component against
+    /// </typeparam>
+    /// <returns>
+    ///     Component of type <typeparamref name="T"/> or <c>null</c>
+    /// </returns>
     public static T? FindComponent<T>(this Window window, Func<T?, bool> predicate) where T : RenderableComponent
     {
         // check the controls of the main window
