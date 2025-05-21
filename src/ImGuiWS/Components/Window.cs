@@ -53,6 +53,7 @@ public class Window : RenderableComponent
     private bool _firstRenderDone = false;
     private Vector2 _currentPosition = Vector2.Zero;
     private Vector2 _currentSize = Vector2.Zero;
+    private ImGuiWindowFlags _windowFlags = 0;
     
     #region Events
     
@@ -112,15 +113,32 @@ public class Window : RenderableComponent
         if (!Visible)
             return;
 
-        if (!_firstRenderDone)
+        if (FixedPosition)
         {
-            if (FixedSize) ImGui.SetNextWindowSize(Size);
-            if (FixedPosition) ImGui.SetNextWindowPos(Position);
+            _windowFlags |= ImGuiWindowFlags.NoMove;
+            ImGui.SetNextWindowPos(Position);
         }
+        else
+        {
+            _windowFlags &= ~ImGuiWindowFlags.NoMove;
+        }
+
+        if (FixedSize)
+        {
+            _windowFlags |= ImGuiWindowFlags.NoResize;
+            ImGui.SetNextWindowSize(Size);
+        }
+        else
+        {
+            _windowFlags &= ~ImGuiWindowFlags.NoResize;
+        }
+        
+        if (!_firstRenderDone) ImGui.SetNextWindowPos(Position);
+        if (!_firstRenderDone) ImGui.SetNextWindowSize(Size);
         
         bool prevVisible = Visible;
         bool isOpen = Visible; // Capture current visible state
-        bool began = ImGui.Begin(Label, ref isOpen);
+        bool began = ImGui.Begin(Label, ref isOpen, _windowFlags);
         
         if (isOpen != prevVisible)
         {
@@ -147,16 +165,22 @@ public class Window : RenderableComponent
             
             var newPos = ImGui.GetWindowPos();
             var newSize = ImGui.GetWindowSize();
-
-            if (!FixedPosition && newPos != Position)
+            
+            if (newPos != Position)
             {
-                Position = newPos;
+                if (!FixedPosition)
+                {
+                    Position = newPos;
+                }
                 OnWindowMoved?.Invoke(Position);
             }
 
-            if (!FixedSize && newSize != Size)
+            if (newSize != Size && !FixedPosition)
             {
-                Size = newSize;
+                if (!FixedSize)
+                {
+                        Size = newSize;
+                }
                 OnWindowResized?.Invoke(Size);
             }
         }

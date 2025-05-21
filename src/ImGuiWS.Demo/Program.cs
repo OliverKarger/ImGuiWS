@@ -25,6 +25,7 @@ public static class Program
         window.SubWindows.Add(() => new Window("Draw List Example"), window =>
         {
             window.Size = new Vector2(512, 512);
+            window.Position = new Vector2(50, 50);
             window.FixedSize = true;
             window.FixedPosition = true;
             window.Controls.Add(() => new DelegateControl("Draw List 1"), control =>
