@@ -12,6 +12,9 @@ using Veldrid.StartupUtilities;
 
 namespace ImGuiWS.Renderer;
 
+/// <summary>
+///     Main Rendering Backend based on <see cref="Veldrid"/>
+/// </summary>
 public class WindowBackend : IDisposable
 {
     internal readonly ILogger logger = LoggerFactory.Create<WindowBackend>();
@@ -317,7 +320,10 @@ public class WindowBackend : IDisposable
         // Store our identifier
         io.Fonts.SetTexID(State.FontAtlasId);
 
-        Context.FontTexture = new();
+        if (Context.FontTexture == null)
+        {
+            throw new Exception("Font Texture is null!");
+        }
         
         Context.FontTexture.Tex = Context.GraphicsDevice.ResourceFactory.CreateTexture(TextureDescription.Texture2D(
             (uint)width,
