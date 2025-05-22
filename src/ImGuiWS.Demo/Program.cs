@@ -24,22 +24,64 @@ public static class Program
 
         window.SubWindows.Add(() => new Window("Draw List Example"), window =>
         {
-            window.Size = new Vector2(512, 512);
             window.Position = new Vector2(50, 50);
             window.FixedSize = true;
-            window.FixedPosition = true;
+            window.FixedPosition = false;
             window.Controls.Add(() => new DelegateControl("Draw List 1"), control =>
             {
                 control.Visible = true;
+
+                Vector2 boxSize = new Vector2(64, 64);
+                const int numBoxes = 32;
+                const int numBoxesPerRow = 8;
+                Vector2 offset = new Vector2(5, 5);
+
+                const uint textColor = 0xFF000000;
+                const uint boxColor = 0xFFAAAAAA;
+                const uint selectedBoxColor = 0xFF000000;
+                const uint selectedTextColor = 0xFFAAAAAA;
+
+                int selectedBoxIndex = 0;
+                
+                int numRows = (int)Math.Ceiling(numBoxes / (float)numBoxesPerRow);
+
+                float requiredWidth = offset.X + numBoxesPerRow * boxSize.X + (numBoxesPerRow - 1) * offset.X;
+                float requiredHeight = offset.Y + numRows * boxSize.Y + (numRows - 1) * offset.Y;
+
+                window.Size = new Vector2(requiredWidth, requiredHeight);
+                
                 control.Delegate += () =>
                 {
-                    var drawList = ImGui.GetWindowDrawList();
+                    ImDrawListPtr drawList = ImGui.GetWindowDrawList();
+                    Vector2 mousePos = ImGui.GetMousePos();
+                    bool mouseClicked = ImGui.IsMouseClicked(ImGuiMouseButton.Left);
 
-                    Vector2 rectOrigin = window.ContentOrigin + new Vector2(100, 100); 
-                    Vector2 rectTarget = window.ContentOrigin + new Vector2(200, 200); 
-                
-                    drawList.AddRectFilled(rectOrigin, rectTarget, 0xFFFFFFFF);
-                    drawList.AddText(rectOrigin, 0xBBBBBBBB, "Hello!");
+                    for (int box = 0; box < numBoxes; box++)
+                    {
+                        int row = box / numBoxesPerRow;
+                        int col = box % numBoxesPerRow;
+
+                        float x = window.ContentOrigin.X + offset.X + col * (boxSize.X + offset.X);
+                        float y = window.ContentOrigin.Y + offset.Y + row * (boxSize.Y + offset.Y);
+
+                        Vector2 topLeft = new Vector2(x, y);
+                        Vector2 bottomRight = topLeft + boxSize;
+
+                        bool isHovered =
+                            mousePos.X >= topLeft.X && mousePos.X <= bottomRight.X &&
+                            mousePos.Y >= topLeft.Y && mousePos.Y <= bottomRight.Y;
+
+                        if (isHovered && mouseClicked)
+                        {
+                            selectedBoxIndex = box;
+                        }
+
+                        uint actualBoxColor = (box == selectedBoxIndex) ? selectedBoxColor : boxColor;
+                        uint actualTextColor = (box == selectedBoxIndex) ? selectedTextColor : textColor;
+
+                        drawList.AddRectFilled(topLeft, bottomRight, actualBoxColor);
+                        drawList.AddText(topLeft + offset, actualTextColor, $"Box {box}");
+                    }
                 };
             });
         });
