@@ -8,6 +8,7 @@ using ImGuiWS.Components.Controls;
 using ImGuiWS.Components.Modals;
 using ImGuiWS.Components.Navigation;
 using ImGuiWS.Integrations;
+using ImGuiWS.Integrations.EmguCV;
 using ImGuiWS.Renderer;
 using ImGuiWS.Utils;
 using SixLabors.ImageSharp;
@@ -15,6 +16,7 @@ using SixLabors.ImageSharp.PixelFormats;
 using Veldrid;
 using Veldrid.StartupUtilities;
 using Vortice.Direct3D11;
+using Texture = ImGuiWS.Renderer.Texture;
 using WindowState = Veldrid.WindowState;
 
 namespace ImGuiWS.Demo;
@@ -25,6 +27,34 @@ public static class Program
     {
         MainWindow window =
             new MainWindow(new WindowSetupOptions("Example Window", new Vector2(1680, 1240), new Vector2(100, 100)));
+
+        window.SubWindows.Add(() => new Window("Image Example"), window =>
+        {
+            TextureManager textureManager = window.MainWindow.Backend.Context.Textures;
+            Texture tex = CvInvoke.Imread("Example.png").AsTexture(textureManager);
+
+            window.Controls.Add(() => new Button("Update Image"), button =>
+            {
+                button.OnClick += () =>
+                {
+                    if (tex.Id != IntPtr.Zero)
+                    {
+                        CvInvoke.Imread("Example1.png").AsTextureUpdate((IntPtr)tex.Id, textureManager);
+                    }
+                };
+            });
+
+            window.Controls.Add(() => new DelegateControl("Preview Window"), control =>
+            {
+                control.Delegate += () =>
+                {
+                    if (tex.Id != IntPtr.Zero)
+                    {
+                        ImGui.Image((IntPtr)tex.Id, tex.Size); 
+                    }
+                };
+            });
+        });
         
         window.SubWindows.Add(() => new Window("Draw List Example"), window =>
         {

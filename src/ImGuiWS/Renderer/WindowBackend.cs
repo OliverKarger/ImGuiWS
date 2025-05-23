@@ -116,7 +116,7 @@ public class WindowBackend : IDisposable
             
         }
         DpiScale =  actualScreen.X / 1920f;
-        
+
         logger.Debug("ImGui Context initialized");
         logger.Information("Window Backend initialization done");
         logger.Debug("DPI Scale Factor: {scaleFactor}", DpiScale);
@@ -223,7 +223,8 @@ public class WindowBackend : IDisposable
 
     public IntPtr CreateImGuiBinding(ref Texture texture)
     {
-        texture.ResourceSet = Context.GraphicsDevice.ResourceFactory.CreateResourceSet(new ResourceSetDescription(Context.TexLayout, texture.View));;
+        ResourceSetDescription rsd = new ResourceSetDescription(Context.TexLayout, texture.View);
+        texture.ResourceSet = Context.GraphicsDevice.ResourceFactory.CreateResourceSet(rsd);
         texture.Id = NextId;
         NextId++;
         return (IntPtr)texture.Id;

@@ -50,16 +50,15 @@ public class TextureManager : IDisposable
             1,1,PixelFormat.B8_G8_R8_A8_UNorm,TextureUsage.Sampled);
         
         texture.Tex = backend.Context.GraphicsDevice.ResourceFactory.CreateTexture(textureDesc);
-
-        UpdateTexture(texture.Tex, pixels, size, offset);
-
+        texture.View = backend.Context.GraphicsDevice.ResourceFactory.CreateTextureView(texture.Tex);
         texture.Id = backend.CreateImGuiBinding(ref texture);
+        
+        UpdateTexture(texture.Tex, pixels, size, offset);
+        
         if (texture.Id == IntPtr.Zero)
         {
             throw new Exception("Failed to create ImGui Binding for Texture");
         }
-        
-        texture.View = backend.Context.GraphicsDevice.ResourceFactory.CreateTextureView(texture.Tex);
         
         logger.Debug("Created Texture");
         _textures.Add(texture);

@@ -13,7 +13,8 @@ namespace ImGuiWS;
 /// <typeparam name="T">Type of Component</typeparam>
 public class WindowComponentCollection<T> : RenderableComponent where T : RenderableComponent
 {
-    public HashSet<T> Components { get; internal set; }= [];
+    public HashSet<T> Components { get; internal set; } = [];
+    private readonly Dictionary<T, Action<T>> _configureActions = new();
     private readonly ILogger _logger;
     private readonly MainWindow _mainWindow;
 
@@ -67,9 +68,14 @@ public class WindowComponentCollection<T> : RenderableComponent where T : Render
         {
             modal.Controls = new WindowComponentCollection<Control>(ParentWindow, _mainWindow);
         }
-        
+
         component.SelfCheck();
-        configure?.Invoke(component);
+
+        // Defer configuration
+        if (configure != null)
+        {
+            _configureActions[component] = c => configure((TDerived)c);
+        }
 
         Components.Add(component);
         _logger.Information("Added Component {id}", component.Id);
@@ -87,17 +93,23 @@ public class WindowComponentCollection<T> : RenderableComponent where T : Render
         }
 
         if (found is TComponent casted) return casted;
-        
+
         _logger.Error("Component with ID {id} found, but Types don't match (Expected: {expected}, Actual: {actual})",
             id, typeof(TComponent).Name, found.GetType().Name);
         return null;
-
     }
 
     public override void Startup()
     {
         foreach (var component in Components)
         {
+            if (_configureActions.TryGetValue(component, out var configure))
+            {
+                configure(component);
+                _configureActions.Remove(component);
+                _logger.Information("Configured Component {id}", component.Id);
+            }
+
             component.Startup();
             _logger.Information("Initialized Component {id}", component.Id);
         }
