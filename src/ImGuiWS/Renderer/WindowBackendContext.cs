@@ -10,13 +10,13 @@ public class Font(string name, ImFontPtr fontPtr, int size)
 {
     public readonly string Name = name;
     public readonly ImFontPtr FontPtr = fontPtr;
-    public readonly int Size = size;
+    public readonly int FontSize = size;
 }
 
 /// <summary>
 ///     Resource/Object Context for Window Backend
 /// </summary>
-public class WindowBackendContext : IDisposable
+public class WindowBackendContext(WindowBackend _backend) : IDisposable
 {
     public GraphicsDevice GraphicsDevice { get; internal set; }
     public Sdl2Window Window { get; internal set; }
@@ -32,8 +32,8 @@ public class WindowBackendContext : IDisposable
     public Pipeline Pipeline { get; internal set; }
     public ResourceSet MainResourceSet { get; internal set; }
     public ResourceSet FontTextureResourceSet { get; internal set; }
-    public TextureCollection Textures { get; internal set; } = new();
-    
+    public TextureManager Textures { get; internal set; } = new(_backend);
+
     public void Dispose()
     {   
         VertexBuffer?.Dispose();
@@ -47,12 +47,6 @@ public class WindowBackendContext : IDisposable
         Pipeline?.Dispose();
         MainResourceSet?.Dispose();
         FontTextureResourceSet?.Dispose();
-        
-        ClearCachedResources();
-    }
-
-    public void ClearCachedResources()
-    {
-        Textures.Clear();
+        Textures.Dispose();
     }
 }

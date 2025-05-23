@@ -1,13 +1,17 @@
 ﻿using System.Numerics;
 using System.Runtime.CompilerServices;
+using Emgu.CV;
 using ImGuiNET;
 using ImGuiWS.Components;
 using ImGuiWS.Components.BuiltIn;
 using ImGuiWS.Components.Controls;
 using ImGuiWS.Components.Modals;
 using ImGuiWS.Components.Navigation;
+using ImGuiWS.Integrations;
 using ImGuiWS.Renderer;
 using ImGuiWS.Utils;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using Veldrid;
 using Veldrid.StartupUtilities;
 using Vortice.Direct3D11;
@@ -21,7 +25,7 @@ public static class Program
     {
         MainWindow window =
             new MainWindow(new WindowSetupOptions("Example Window", new Vector2(1680, 1240), new Vector2(100, 100)));
-
+        
         window.SubWindows.Add(() => new Window("Draw List Example"), window =>
         {
             window.Position = new Vector2(50, 50);
@@ -138,6 +142,7 @@ public static class Program
         });
         
         window.Startup();
+
         while (window.WindowExists)
         {
             window.Update(.0f);

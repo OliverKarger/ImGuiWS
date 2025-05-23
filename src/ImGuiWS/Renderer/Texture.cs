@@ -1,4 +1,6 @@
-﻿using Veldrid;
+﻿using System.Net.Mime;
+using System.Numerics;
+using Veldrid;
 
 namespace ImGuiWS.Renderer;
 
@@ -25,12 +27,17 @@ public class Texture : IDisposable
     /// <summary>
     ///     ImGui Binding ID if available
     /// </summary>
-    public IntPtr? ImGuiBinding { get; set; }
+    public IntPtr? Id { get; set; }
     
     /// <summary>
     ///     Display Name of the Texture
     /// </summary>
     public string? Name { get; set; }
+
+    public Vector2 Size
+    {
+        get => new Vector2(Tex.Width, Tex.Height);
+    }
 
     public Texture(TextureView view, Veldrid.Texture texture, ResourceSet resourceSet)
     {
@@ -44,7 +51,7 @@ public class Texture : IDisposable
         View = view;
         Tex = texture;
         ResourceSet = resourceSet;
-        ImGuiBinding = imGuiHandle;
+        Id = imGuiHandle;
     }
     
     public Texture() {}

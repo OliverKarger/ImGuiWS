@@ -20,7 +20,7 @@ public class WindowBackend : IDisposable
     internal readonly ILogger logger = LoggerFactory.Create<WindowBackend>();
     
     /// <inheritdoc cref="WindowBackendContext"/> 
-    public WindowBackendContext Context { get; internal set; } = new();
+    public WindowBackendContext Context { get; internal set; }
     
     /// <inheritdoc cref="WindowModifierKeyState"/> 
     public WindowModifierKeyState ModifierKeyState { get; internal set; } = new();
@@ -61,6 +61,8 @@ public class WindowBackend : IDisposable
         logger.Debug("Initializing Backend for Window {windowName}", setupOptions.Title);
         MainWindow = mainWindow;
 
+        Context = new(this);
+        
         Context.Window = new Sdl2Window(
             setupOptions.Title,
             (int)setupOptions.Position.X,
@@ -219,20 +221,12 @@ public class WindowBackend : IDisposable
         logger.Information("Device Resource initialization done");
     }
 
-    /// <summary>
-    ///     Returns or Creates a ImGui Binding for a <see cref="TextureView"/>
-    /// </summary>
-    public IntPtr GetOrCreateImGuiBinding(TextureView textureView)
+    public IntPtr CreateImGuiBinding(ref Texture texture)
     {
-        if (!Context.Textures.GetByView(textureView, out Texture? texture))
-        {
-            texture.ResourceSet = Context.GraphicsDevice.ResourceFactory.CreateResourceSet(new ResourceSetDescription(Context.TexLayout, texture.View));;
-            texture.ImGuiBinding = NextId;
-            logger.Verbose("Created ImGui Binding {bindingId} for TextureView: {name}", texture.ImGuiBinding, textureView.Name);
-        }
-
-        logger.Verbose("Returned ImGui Binding {bindingId} for TextureView", texture.ImGuiBinding, textureView.Name);
-        return (IntPtr)texture!.ImGuiBinding!;
+        texture.ResourceSet = Context.GraphicsDevice.ResourceFactory.CreateResourceSet(new ResourceSetDescription(Context.TexLayout, texture.View));;
+        texture.Id = NextId;
+        NextId++;
+        return (IntPtr)texture.Id;
     }
 
     /// <summary>
@@ -246,7 +240,8 @@ public class WindowBackend : IDisposable
     /// </exception>
     public ResourceSet GetImageResourceSet(IntPtr imGuiBinding)
     {
-        if (!Context.Textures.GetByBindingId(imGuiBinding, out Texture? texture))
+        Texture? texture = Context.Textures.GetByBindingId(imGuiBinding);
+        if (texture == null)
         {
             logger.Fatal("Found no Resource Set for ImGui Binding Id {bindingId}", imGuiBinding);
             throw new InvalidOperationException("No registered ImGui binding with id " + imGuiBinding.ToString());
