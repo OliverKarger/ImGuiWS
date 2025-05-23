@@ -4,7 +4,6 @@ using ImGuiWS.Components.Controls;
 using ImGuiWS.Renderer;
 using ImGuiWS.Utils;
 using Veldrid;
-using Veldrid.StartupUtilities;
 
 namespace ImGuiWS.Components;
 
@@ -12,78 +11,76 @@ namespace ImGuiWS.Components;
 ///     Main Window Component
 ///     Represents the Main Application Window
 /// </summary>
-public class MainWindow : Window
-{
-    private Stopwatch _stopWatch = new Stopwatch();
-    private float _delta = .0f;
-    
+public class MainWindow : Window {
+    private Single _delta;
+    private Stopwatch _stopWatch = new();
+
+    public MainWindow(WindowSetupOptions setupOptions) : base(setupOptions.Title.ToControlId()) {
+        this.Backend = new WindowBackend(setupOptions, this);
+        this.Label = setupOptions.Title;
+
+        this.MainWindow = this;
+        this.ParentWindow = null;
+        this.SubWindows = new WindowComponentCollection<Window>(this, this);
+        this.Controls = new WindowComponentCollection<Control>(this, this);
+    }
+
     /// <summary>
     ///     Window Backend
     /// </summary>
-    public WindowBackend Backend { get; private set; }
-    
+    public WindowBackend Backend { get; }
+
     /// <summary>
     ///     Indicates wether the Window should be closed
     /// </summary>
-    public bool WindowExists => Backend.Context.Window.Exists;
-    
+    public Boolean WindowExists => this.Backend.Context.Window.Exists;
+
     /// <summary>
     ///     Clear/Background Color
     /// </summary>
-    public Vector4 ClearColor
-    {
-        get => Backend.State.ClearColor;
-        set => Backend.State.ClearColor = value;
+    public Vector4 ClearColor {
+        get => this.Backend.State.ClearColor;
+        set => this.Backend.State.ClearColor = value;
     }
 
-    public MainWindow(WindowSetupOptions setupOptions) : base(setupOptions.Title.ToControlId())
-    {
-        Backend = new WindowBackend(setupOptions, this);
-        Label = setupOptions.Title;
-
-        MainWindow = this;
-        ParentWindow = null;
-        SubWindows = new WindowComponentCollection<Window>(this, this);
-        Controls = new WindowComponentCollection<Control>(this, this);
-    }
-
-    public override void Startup()
-    {
-        string imguiIniPath = Path.Join(Environment.CurrentDirectory, "imgui.ini");
+    public override void Startup() {
+        String imguiIniPath = Path.Join(Environment.CurrentDirectory, "imgui.ini");
 
         // Backend.LoadFontFromMemory("Roboto", 13);
-        Backend.LoadDefaultFont(13);
-        
-        if (File.Exists(imguiIniPath)) File.Delete(imguiIniPath);
-        
-        Backend.SetupContext(); 
-        _stopWatch = Stopwatch.StartNew();
-        
+        this.Backend.LoadDefaultFont(13);
+
+        if(File.Exists(imguiIniPath)) {
+            File.Delete(imguiIniPath);
+        }
+
+        this.Backend.SetupContext();
+        this._stopWatch = Stopwatch.StartNew();
+
         base.Startup();
     }
 
-    public override void Update(float deltaTime)
-    {
-        _delta = _stopWatch.ElapsedTicks / (float)Stopwatch.Frequency;
-        _stopWatch.Restart();
+    public override void Update(Single deltaTime) {
+        this._delta = this._stopWatch.ElapsedTicks / (Single)Stopwatch.Frequency;
+        this._stopWatch.Restart();
 
-        InputSnapshot inputSnapshot = Backend.Context.Window.PumpEvents();
+        InputSnapshot inputSnapshot = this.Backend.Context.Window.PumpEvents();
 
-        if (!WindowExists) return;
-        
-        Backend.BeginRender();
-        Backend.UpdateInput(_delta, inputSnapshot);
-        
-        SubWindows.Update(_delta);
-        Controls.Update(_delta);
+        if(!this.WindowExists) {
+            return;
+        }
 
-        Backend.Render();
-        Backend.EndRender();
+        this.Backend.BeginRender();
+        this.Backend.UpdateInput(this._delta, inputSnapshot);
+
+        this.SubWindows.Update(this._delta);
+        this.Controls.Update(this._delta);
+
+        this.Backend.Render();
+        this.Backend.EndRender();
     }
 
-    public override void Shutdown()
-    {
+    public override void Shutdown() {
         base.Shutdown();
-        Backend.Dispose();
+        this.Backend.Dispose();
     }
 }

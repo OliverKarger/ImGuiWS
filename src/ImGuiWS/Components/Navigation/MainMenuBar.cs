@@ -6,26 +6,19 @@ namespace ImGuiWS.Components.Navigation;
 ///     Main Menu Bar
 /// </summary>
 /// <remarks>
-///     Only to be used on <see cref="MainWindow"/>
-///     Use <see cref="MenuBar"/> for ordinary <see cref="Window"/>
+///     Only to be used on <see cref="MainWindow" />
+///     Use <see cref="MenuBar" /> for ordinary <see cref="Window" />
 /// </remarks>
-public class MainMenuBar : Menu
-{
-    public MainMenuBar(string id) : base(id)
-    {
-    }
+public class MainMenuBar : Menu {
+    public MainMenuBar(String id) : base(id) { }
 
-    public MainMenuBar(string id, Window? parentWindow = null) : base(id, parentWindow)
-    {
-    }
+    public MainMenuBar(String id, Window? parentWindow = null) : base(id, parentWindow) { }
 
-    public override void Update(float delta)
-    {
-        if (ImGui.BeginMainMenuBar())
-        {
-            Items.Update(delta);
-            SubMenues.Update(delta);
-            
+    public override void Update(Single delta) {
+        if(ImGui.BeginMainMenuBar()) {
+            this.Items.Update(delta);
+            this.SubMenues.Update(delta);
+
             ImGui.EndMainMenuBar();
         }
     }

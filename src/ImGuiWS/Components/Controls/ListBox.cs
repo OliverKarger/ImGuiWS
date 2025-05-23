@@ -1,55 +1,30 @@
-﻿using System.Numerics;
-using ImGuiNET;
+﻿using ImGuiNET;
 using ImGuiWS.Utils;
 
 namespace ImGuiWS.Components.Controls;
 
-public class ListBox : Control
-{
-    #region Properties
-    /// <summary>
-    ///     Current Item List
-    /// </summary>
-    public List<string> Items { get; internal set; } = new();
-    /// <summary>
-    ///     Index of the current Item
-    /// </summary>
-    public int CurrentIndex { get; set; } = 0;
-    /// <summary>
-    ///     Label of the ListBox
-    /// </summary>
-    public string Label { get; set; }
-    #endregion
-    
-    public ListBox(string label, Window window) : base(label.ToControlId(), window)
-    {
-        Label = label;
+public class ListBox : Control {
+    public ListBox(String label, Window window) : base(label.ToControlId(), window) {
+        this.Label = label;
     }
 
-    public ListBox(string label) : base(label.ToControlId())
-    {
-        Label = label;
+    public ListBox(String label) : base(label.ToControlId()) {
+        this.Label = label;
     }
 
-    public override void Update(float delta)
-    {
-        if (CurrentIndex >= Items.Count)
-        {
-            CurrentIndex = 0;
+    public override void Update(Single delta) {
+        if(this.CurrentIndex >= this.Items.Count) {
+            this.CurrentIndex = 0;
         }
-        
-        if (ImGui.BeginListBox(Label, Size))
-        {
-            for (int i = 0; i < Items.Count; i++)
-            {
-                bool isSelected = (i == CurrentIndex);
-                if (ImGui.Selectable(Items[i], isSelected))
-                {
-                    CurrentIndex = i;
+
+        if(ImGui.BeginListBox(this.Label, this.Size)) {
+            for(Int32 i = 0; i < this.Items.Count; i++) {
+                Boolean isSelected = i == this.CurrentIndex;
+                if(ImGui.Selectable(this.Items[i], isSelected)) {
+                    this.CurrentIndex = i;
                 }
 
-                if (isSelected)
-                {
+                if(isSelected) {
                     ImGui.SetItemDefaultFocus();
                 }
             }
@@ -57,4 +32,23 @@ public class ListBox : Control
             ImGui.EndListBox();
         }
     }
+
+    #region Properties
+
+    /// <summary>
+    ///     Current Item List
+    /// </summary>
+    public List<String> Items { get; internal set; } = new();
+
+    /// <summary>
+    ///     Index of the current Item
+    /// </summary>
+    public Int32 CurrentIndex { get; set; }
+
+    /// <summary>
+    ///     Label of the ListBox
+    /// </summary>
+    public String Label { get; set; }
+
+    #endregion
 }

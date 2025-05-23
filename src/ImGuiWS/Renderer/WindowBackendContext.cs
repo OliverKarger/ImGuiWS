@@ -1,23 +1,19 @@
-﻿using System.Numerics;
-using ImGuiNET;
-using ImGuiWS.Utils.Extensions;
+﻿using ImGuiNET;
 using Veldrid;
 using Veldrid.Sdl2;
 
 namespace ImGuiWS.Renderer;
 
-public class Font(string name, ImFontPtr fontPtr, int size)
-{
-    public readonly string Name = name;
+public class Font(String name, ImFontPtr fontPtr, Int32 size) {
     public readonly ImFontPtr FontPtr = fontPtr;
-    public readonly int FontSize = size;
+    public readonly Int32 FontSize = size;
+    public readonly String Name = name;
 }
 
 /// <summary>
 ///     Resource/Object Context for Window Backend
 /// </summary>
-public class WindowBackendContext(WindowBackend _backend) : IDisposable
-{
+public class WindowBackendContext(WindowBackend _backend) : IDisposable {
     public GraphicsDevice GraphicsDevice { get; internal set; }
     public Sdl2Window Window { get; internal set; }
     public CommandList CommandList { get; internal set; }
@@ -34,19 +30,18 @@ public class WindowBackendContext(WindowBackend _backend) : IDisposable
     public ResourceSet FontTextureResourceSet { get; internal set; }
     public TextureManager Textures { get; internal set; } = new(_backend);
 
-    public void Dispose()
-    {   
-        VertexBuffer?.Dispose();
-        IndexBuffer?.Dispose();
-        ProjectionBuffer?.Dispose();
-        FontTexture?.Dispose();
-        VertexShader?.Dispose();
-        FragmentShader?.Dispose();
-        ResLayout?.Dispose();
-        TexLayout?.Dispose();
-        Pipeline?.Dispose();
-        MainResourceSet?.Dispose();
-        FontTextureResourceSet?.Dispose();
-        Textures.Dispose();
+    public void Dispose() {
+        this.VertexBuffer?.Dispose();
+        this.IndexBuffer?.Dispose();
+        this.ProjectionBuffer?.Dispose();
+        this.FontTexture?.Dispose();
+        this.VertexShader?.Dispose();
+        this.FragmentShader?.Dispose();
+        this.ResLayout?.Dispose();
+        this.TexLayout?.Dispose();
+        this.Pipeline?.Dispose();
+        this.MainResourceSet?.Dispose();
+        this.FontTextureResourceSet?.Dispose();
+        this.Textures.Dispose();
     }
 }

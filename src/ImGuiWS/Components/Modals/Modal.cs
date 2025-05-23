@@ -7,51 +7,48 @@ namespace ImGuiWS.Components.Modals;
 /// <summary>
 ///     Popup Modal Control
 /// </summary>
-public class Modal : Control
-{
-    #region Properties
-    /// <summary>
-    ///     Nested Controls
-    /// </summary>
-    public WindowComponentCollection<Control> Controls { get; set; }
-    
-    /// <summary>
-    ///     Label of the Control
-    /// </summary>
-    public string Label { get; set; }
-    #endregion
-    
-    public Modal(string title) : base(title.ToControlId())
-    {
-        Label = title;
-        Visible = false;
+public class Modal : Control {
+    public Modal(String title) : base(title.ToControlId()) {
+        this.Label = title;
+        this.Visible = false;
     }
 
-    public Modal(string title, Window? parentWindow = null) : base(title.ToControlId(), parentWindow)
-    {
-        Label = title;
-        Visible = false;
+    public Modal(String title, Window? parentWindow = null) : base(title.ToControlId(), parentWindow) {
+        this.Label = title;
+        this.Visible = false;
     }
 
-    public override void Startup()
-    {
-        Controls.Startup();
+    public override void Startup() {
+        this.Controls.Startup();
     }
-    
-    public override void Update(float delta)
-    {
-        if (!Visible) return;
-        
-        ImGui.OpenPopup(Label);
-        if (ImGui.BeginPopupModal(Label))
-        {
-            Controls.Update(delta); 
+
+    public override void Update(Single delta) {
+        if(!this.Visible) {
+            return;
+        }
+
+        ImGui.OpenPopup(this.Label);
+        if(ImGui.BeginPopupModal(this.Label)) {
+            this.Controls.Update(delta);
             ImGui.EndPopup();
         }
     }
 
-    public override void Shutdown()
-    {
-        Controls.Shutdown();
+    public override void Shutdown() {
+        this.Controls.Shutdown();
     }
+
+    #region Properties
+
+    /// <summary>
+    ///     Nested Controls
+    /// </summary>
+    public WindowComponentCollection<Control> Controls { get; set; }
+
+    /// <summary>
+    ///     Label of the Control
+    /// </summary>
+    public String Label { get; set; }
+
+    #endregion
 }

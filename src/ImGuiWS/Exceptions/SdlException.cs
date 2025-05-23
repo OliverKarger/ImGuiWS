@@ -6,4 +6,4 @@
 /// <param name="message">
 ///     SDL2 Error Message
 /// </param>
-public class SdlException(string message) : Exception(message) {}
+public class SdlException(String message) : Exception(message) { }

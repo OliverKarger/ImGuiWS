@@ -1,42 +1,38 @@
-﻿using System.Numerics;
-using System.Reflection.Emit;
-using ImGuiNET;
+﻿using ImGuiNET;
 using ImGuiWS.Utils;
 
 namespace ImGuiWS.Components.Controls;
 
-public class Button : Control
-{
+public class Button : Control {
+    public Button(String label) : base(label.ToControlId()) {
+        this.Label = label;
+    }
+
+    public Button(String label, Window window) : base(label.ToControlId(), window) {
+        this.Label = label;
+    }
+
+    #region Properties
+
+    /// <summary>
+    ///     Label of the Button
+    /// </summary>
+    public String Label { get; set; }
+
+    #endregion
+
     #region Events
+
     /// <summary>
     ///     Invoked when Button is clicked
     /// </summary>
     public event Action OnClick;
 
     #endregion
-    
-    #region Properties
-    /// <summary>
-    ///     Label of the Button 
-    /// </summary>
-    public string Label { get; set; }
-    #endregion
 
-    public Button(string label) : base(label.ToControlId())
-    {
-        Label = label;
-    }
-
-    public Button(string label, Window window) : base(label.ToControlId(), window)
-    {
-        Label = label;
-    }
-
-    public override void Update(float delta)
-    {
-        if (ImGui.Button(Label, Size))
-        {
-            OnClick?.Invoke();
+    public override void Update(Single delta) {
+        if(ImGui.Button(this.Label, this.Size)) {
+            this.OnClick?.Invoke();
         }
     }
 }

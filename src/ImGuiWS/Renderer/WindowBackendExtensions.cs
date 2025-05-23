@@ -1,51 +1,43 @@
 ﻿using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Text;
 using ImGuiNET;
 using ImGuiWS.Exceptions;
 using ImGuiWS.Utils;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
-using Veldrid;
 using Veldrid.Sdl2;
 using Rectangle = Veldrid.Rectangle;
 
 namespace ImGuiWS.Renderer;
 
-public static class WindowBackendExtensions
-{
-    private static unsafe void _LoadFont(ref FontTexture texture, byte[] fontBytes, int size, ImFontConfig* config, ushort* ranges)
-    {
-        var io = ImGui.GetIO();
+public static class WindowBackendExtensions {
+    private static unsafe void _LoadFont(ref FontTexture texture, Byte[] fontBytes, Int32 size,
+        ImFontConfig* config,
+        UInt16* ranges) {
+        ImGuiIOPtr io = ImGui.GetIO();
 
-        fixed (byte* fontData = fontBytes)
-        {
-            ImFont* font = ImGuiNative.ImFontAtlas_AddFontFromMemoryTTF(io.Fonts.NativePtr, fontData, fontBytes.Length, size, config, ranges);
+        fixed(Byte* fontData = fontBytes) {
+            ImFont* font = ImGuiNative.ImFontAtlas_AddFontFromMemoryTTF(io.Fonts.NativePtr, fontData,
+                fontBytes.Length, size, config, ranges);
             texture.Handle = new ImFontPtr(font);
         }
 
         ImGuiNative.ImFontConfig_destroy(config);
 
-        io.Fonts.GetTexDataAsRGBA32(out IntPtr pixels, out int width, out int height, out int bytesPerPixel);
+        io.Fonts.GetTexDataAsRGBA32(out IntPtr pixels, out Int32 width, out Int32 height, out Int32 bytesPerPixel);
         texture.Pixels = pixels;
         texture.Size = new Vector2(width, height);
         texture.BytesPerPixel = bytesPerPixel;
     }
 
-    private static unsafe void _MergeFont(byte[] fontBytes, int size, ushort[] ranges)
-    {
-        var io = ImGui.GetIO();
+    private static unsafe void _MergeFont(Byte[] fontBytes, Int32 size, UInt16[] ranges) {
+        ImGuiIOPtr io = ImGui.GetIO();
 
         ImFontConfig* config = ImGuiNative.ImFontConfig_ImFontConfig();
-        config->MergeMode = 1;
-        config->PixelSnapH = 1;
+        config -> MergeMode = 1;
+        config -> PixelSnapH = 1;
 
-        fixed (byte* fontData = fontBytes)
-        fixed (ushort* glyphRanges = ranges)
-        {
-            ImGuiNative.ImFontAtlas_AddFontFromMemoryTTF(io.Fonts.NativePtr, fontData, fontBytes.Length, size, config, glyphRanges);
+        fixed(Byte* fontData = fontBytes)
+        fixed(UInt16* glyphRanges = ranges) {
+            ImGuiNative.ImFontAtlas_AddFontFromMemoryTTF(io.Fonts.NativePtr, fontData, fontBytes.Length, size, config,
+                glyphRanges);
         }
 
         ImGuiNative.ImFontConfig_destroy(config);
@@ -59,35 +51,34 @@ public static class WindowBackendExtensions
     /// <param name="size"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    public static FontTexture LoadEmbeddedFont(this WindowBackend backend, string name, int size)
-    {
-        if (backend.State.RenderingBegun)
-        {
+    public static FontTexture LoadEmbeddedFont(this WindowBackend backend, String name, Int32 size) {
+        if(backend.State.RenderingBegun) {
             backend.logger.Error("Failed to load Font. Rendering has already begun!");
             throw new InvalidOperationException("Cannot add Font when rendering has already begun!");
         }
 
-        var fontBytes = EmbeddedResourceManager.GetEmbeddedResourceBytes<WindowBackend>(name);
-        if (fontBytes.Length == 0)
+        Byte[] fontBytes = EmbeddedResourceManager.GetEmbeddedResourceBytes<WindowBackend>(name);
+        if(fontBytes.Length == 0) {
             throw new InvalidOperationException("Failed to load Font");
+        }
 
-        size = (int)(size * backend.DpiScale);
+        size = (Int32)(size * backend.DpiScale);
 
-        if (backend.Context.FontTexture == null)
-            backend.Context.FontTexture = new();
+        if(backend.Context.FontTexture == null) {
+            backend.Context.FontTexture = new FontTexture();
+        }
 
         FontTexture fontTexture = backend.Context.FontTexture;
 
-        unsafe
-        {
-            var io = ImGui.GetIO();
+        unsafe {
+            ImGuiIOPtr io = ImGui.GetIO();
 
             ImFontConfig* config = ImGuiNative.ImFontConfig_ImFontConfig();
-            config->OversampleH = 6;
-            config->OversampleV = 4;
-            config->PixelSnapH = 1;
+            config -> OversampleH = 6;
+            config -> OversampleV = 4;
+            config -> PixelSnapH = 1;
 
-            ushort* ranges = (ushort*)io.Fonts.GetGlyphRangesDefault();
+            UInt16* ranges = (UInt16*)io.Fonts.GetGlyphRangesDefault();
 
             _LoadFont(ref fontTexture, fontBytes, size, config, ranges);
         }
@@ -104,44 +95,44 @@ public static class WindowBackendExtensions
     /// <param name="backend"></param>
     /// <param name="size"></param>
     /// <exception cref="InvalidOperationException"></exception>
-    public static void LoadDefaultFont(this WindowBackend backend, int size)
-    {
-        if (backend.State.RenderingBegun)
-        {
+    public static void LoadDefaultFont(this WindowBackend backend, Int32 size) {
+        if(backend.State.RenderingBegun) {
             backend.logger.Error("Failed to load Font. Rendering has already begun!");
             throw new InvalidOperationException("Cannot add Font when rendering has already begun!");
         }
 
-        var roboto = EmbeddedResourceManager.GetEmbeddedResourceBytes<WindowBackend>("Roboto");
-        var faSolid = EmbeddedResourceManager.GetEmbeddedResourceBytes<WindowBackend>("FontAwesomeSolid");
-        var faRegular = EmbeddedResourceManager.GetEmbeddedResourceBytes<WindowBackend>("FontAwesomeRegular");
+        Byte[] roboto = EmbeddedResourceManager.GetEmbeddedResourceBytes<WindowBackend>("Roboto");
+        Byte[] faSolid = EmbeddedResourceManager.GetEmbeddedResourceBytes<WindowBackend>("FontAwesomeSolid");
+        Byte[] faRegular =
+            EmbeddedResourceManager.GetEmbeddedResourceBytes<WindowBackend>("FontAwesomeRegular");
 
-        if (roboto.Length == 0 || faSolid.Length == 0 || faRegular.Length == 0)
+        if(roboto.Length == 0 || faSolid.Length == 0 || faRegular.Length == 0) {
             throw new InvalidOperationException("One or more required fonts failed to load.");
+        }
 
-        size = (int)(size * backend.DpiScale);
+        size = (Int32)(size * backend.DpiScale);
 
-        if (backend.Context.FontTexture == null)
-            backend.Context.FontTexture = new();
+        if(backend.Context.FontTexture == null) {
+            backend.Context.FontTexture = new FontTexture();
+        }
 
         FontTexture fontTexture = backend.Context.FontTexture;
 
-        unsafe
-        {
-            var io = ImGui.GetIO();
+        unsafe {
+            ImGuiIOPtr io = ImGui.GetIO();
 
             // Load Roboto as base font
             ImFontConfig* baseConfig = ImGuiNative.ImFontConfig_ImFontConfig();
-            baseConfig->OversampleH = 6;
-            baseConfig->OversampleV = 4;
-            baseConfig->PixelSnapH = 1;
-            baseConfig->MergeMode = 0;
+            baseConfig -> OversampleH = 6;
+            baseConfig -> OversampleV = 4;
+            baseConfig -> PixelSnapH = 1;
+            baseConfig -> MergeMode = 0;
 
-            ushort* baseRanges = (ushort*)io.Fonts.GetGlyphRangesDefault();
+            UInt16* baseRanges = (UInt16*)io.Fonts.GetGlyphRangesDefault();
 
-            fixed (byte* robotoData = roboto)
-            {
-                ImFont* robotoFont = ImGuiNative.ImFontAtlas_AddFontFromMemoryTTF(io.Fonts.NativePtr, robotoData, roboto.Length, size, baseConfig, baseRanges);
+            fixed(Byte* robotoData = roboto) {
+                ImFont* robotoFont = ImGuiNative.ImFontAtlas_AddFontFromMemoryTTF(io.Fonts.NativePtr, robotoData,
+                    roboto.Length, size, baseConfig, baseRanges);
                 fontTexture.Handle = new ImFontPtr(robotoFont);
                 fontTexture.Name = "Roboto";
             }
@@ -149,13 +140,14 @@ public static class WindowBackendExtensions
             ImGuiNative.ImFontConfig_destroy(baseConfig);
 
             // Merge FontAwesome icons
-            ushort[] iconRanges = new ushort[] { 0xf000, 0xf3ff, 0 };
+            UInt16[] iconRanges = new UInt16[] { 0xf000, 0xf3ff, 0 };
 
             _MergeFont(faSolid, size, iconRanges);
             _MergeFont(faRegular, size, iconRanges);
 
             // Upload texture to GPU
-            io.Fonts.GetTexDataAsRGBA32(out IntPtr pixels, out int width, out int height, out int bytesPerPixel);
+            io.Fonts.GetTexDataAsRGBA32(out IntPtr pixels, out Int32 width, out Int32 height,
+                out Int32 bytesPerPixel);
 
             fontTexture.Pixels = pixels;
             fontTexture.Size = new Vector2(width, height);
@@ -163,9 +155,9 @@ public static class WindowBackendExtensions
         }
 
         backend.RecreateFontDeviceTexture();
-        backend.logger.Information("Loaded Font with FontAwesome: Roboto + FaSolid900 + FaRegular400 ({size}px)", size);
+        backend.logger.Information("Loaded Font with FontAwesome: Roboto + FaSolid900 + FaRegular400 ({size}px)",
+            size);
     }
-
 
 
     /// <summary>
@@ -175,18 +167,15 @@ public static class WindowBackendExtensions
     ///     Window Backend
     /// </param>
     /// <returns></returns>
-    public static Vector2 GetScreenSize(this WindowBackend backend)
-    {
-        int result;
+    public static Vector2 GetScreenSize(this WindowBackend backend) {
+        Int32 result;
         Rectangle rect;
 
-        unsafe
-        {
-            result = Sdl2Native.SDL_GetDisplayBounds(0, (Rectangle*)&rect);
+        unsafe {
+            result = Sdl2Native.SDL_GetDisplayBounds(0, &rect);
         }
 
-        if (result != 0)
-        {
+        if(result != 0) {
             throw new SdlException("Error while calling Sdl2Native.SDL_GetDisplayBounds");
         }
 

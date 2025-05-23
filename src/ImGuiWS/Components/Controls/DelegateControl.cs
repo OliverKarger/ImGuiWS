@@ -6,24 +6,21 @@ namespace ImGuiWS.Components.Controls;
 ///     Provides a Callback-based Control which
 ///     can be customized by the implementor
 /// </summary>
-public class DelegateControl : Control
-{
+public class DelegateControl : Control {
+    public DelegateControl(String id, Window window) : base(id.ToControlId(), window) { }
+
+    public DelegateControl(String id) : base(id.ToControlId()) { }
+
     /// <summary>
     ///     Callback Delegate
     /// </summary>
     public Action? Delegate { get; set; }
-    
-    public DelegateControl(string id, Window window) : base(id.ToControlId(), window)
-    {
-    }
 
-    public DelegateControl(string id) : base(id.ToControlId())
-    {
-    }
+    public override void Update(Single delta) {
+        if(!this.Visible) {
+            return;
+        }
 
-    public override void Update(float delta)
-    {
-        if (!Visible) return;
-        Delegate?.Invoke();
+        this.Delegate?.Invoke();
     }
 }

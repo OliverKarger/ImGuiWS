@@ -1,15 +1,7 @@
 ﻿namespace ImGuiWS;
 
-public static class FontAwesome
-{
-    public enum FaIconStyle
-    {
-        Solid,
-        Regular
-    }
-
-    public enum FaIcon
-    {
+public static class FontAwesome {
+    public enum FaIcon {
         Home,
         User,
         Cog,
@@ -29,8 +21,12 @@ public static class FontAwesome
         ThumbsUp
     }
 
-    private static readonly Dictionary<(FaIcon, FaIconStyle), string> IconMap = new()
-    {
+    public enum FaIconStyle {
+        Solid,
+        Regular
+    }
+
+    private static readonly Dictionary<(FaIcon, FaIconStyle), String> IconMap = new() {
         // Solid icons
         { (FaIcon.Home, FaIconStyle.Solid), "\uf015" },
         { (FaIcon.User, FaIconStyle.Solid), "\uf007" },
@@ -62,10 +58,8 @@ public static class FontAwesome
         { (FaIcon.ThumbsUp, FaIconStyle.Regular), "\uf164" }
     };
 
-    public static string Get(FaIcon icon, FaIconStyle style = FaIconStyle.Solid)
-    {
-        if (IconMap.TryGetValue((icon, style), out var unicode))
-        {
+    public static String Get(FaIcon icon, FaIconStyle style = FaIconStyle.Solid) {
+        if(IconMap.TryGetValue((icon, style), out String? unicode)) {
             return unicode;
         }
 

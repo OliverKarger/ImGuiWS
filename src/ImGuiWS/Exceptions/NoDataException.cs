@@ -1,6 +1,3 @@
 namespace ImGuiWS.Exceptions;
 
-public class NoDataException(string message, string obj) : Exception($"{obj}: {message}")
-{
-    
-}
+public class NoDataException(String message, String obj) : Exception($"{obj}: {message}") { }

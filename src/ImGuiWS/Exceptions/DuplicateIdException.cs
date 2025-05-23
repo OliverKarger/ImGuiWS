@@ -7,4 +7,4 @@
 /// <param name="id">
 ///     ID of the Component
 /// </param>
-public class DuplicateIdException(string id) : Exception($"Component with Id {id} already exists.");
+public class DuplicateIdException(String id) : Exception($"Component with Id {id} already exists.");

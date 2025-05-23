@@ -8,12 +8,11 @@ using SixLabors.ImageSharp.PixelFormats;
 namespace ImGuiWS.Integrations.ImageSharp;
 
 /// <summary>
-///     Extensions to <see cref="Image"/>
+///     Extensions to <see cref="Image" />
 /// </summary>
-public static class ImageExtensions
-{
+public static class ImageExtensions {
     /// <summary>
-    ///     Converts <see cref="Image"/> to <see cref="Texture"/>
+    ///     Converts <see cref="Image" /> to <see cref="Texture" />
     /// </summary>
     /// <param name="image">
     ///     Image Instance
@@ -31,15 +30,15 @@ public static class ImageExtensions
     public static Texture AsTexture2D<TPixel>(
         this Image<TPixel> image,
         TextureManager textureManager,
-        Vector3 offset = default) where TPixel : unmanaged, IPixel<TPixel>
-    {
+        Vector3 offset = default) where TPixel : unmanaged, IPixel<TPixel> {
         TPixel[] pixels = new TPixel[image.Width * image.Height];
         image.CopyPixelDataTo(pixels);
 
-        ReadOnlySpan<byte> pixelBytes = MemoryMarshal.AsBytes(pixels.AsSpan());
+        ReadOnlySpan<Byte> pixelBytes = MemoryMarshal.AsBytes(pixels.AsSpan());
         Texture texture = textureManager.CreateTexture2D(pixelBytes, image.Size.ToVector2(), offset);
-        
-        textureManager.logger.Information("Created Texture (Size: {sizeX}x{sizeY}, Binding Id: {binding})", texture.Size.X, texture.Size.Y, texture.Id ?? IntPtr.Zero);
+
+        textureManager.logger.Information("Created Texture (Size: {sizeX}x{sizeY}, Binding Id: {binding})",
+            texture.Size.X, texture.Size.Y, texture.Id ?? IntPtr.Zero);
         return texture;
     }
 }
